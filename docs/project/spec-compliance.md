@@ -8,6 +8,18 @@
 
 ## Current Implementation Status
 
+### Imported membership visibility
+
+| Rule | Implementation | Evidence | Scope |
+| --- | --- | --- | --- |
+| KerML 1.0 §7.2.5.4: hide imported memberships with the same name for distinct elements; importing one element repeatedly is not a conflict | `resolve/unqualified.go` collects native import candidates and deduplicates alias targets by element identity; `resolve/qualified.go` prevents index fallback from restoring a hidden member | `passes/imported_name_clash_test.go:TestImportedNameClashVisibility` covers ordinary and recursive imports in both orders, re-exports, qualified access, aliases, short names, owned members and outer-scope fallback | ⚠️ Ordinary name lookup covered by these controls; invocation overload candidate selection is unchanged, so this is not a claim of complete import-rule conformance |
+
+The DRYAS maintenance branch also carries kind-implied Part typing, base-reachable
+specialization cycles, non-cascading declared-typing checks and experimental native
+query exports. See [maintenance scope](dryas-maintenance.md); these additions do not
+establish full standards conformance or release qualification.
+
+
 Loop and branch bodies that state their own token flow are lowered by
 `lower/block_graph.go:lowerStatedBlock` and run as transparent, per-iteration
 performances by `runtime/action_statements.go:performBlockFlow` through
