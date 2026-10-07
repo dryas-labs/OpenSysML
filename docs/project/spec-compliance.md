@@ -3345,3 +3345,13 @@ SysML v2 defines *evaluation* of a constraint, requirement or `assert satisfy` a
 | Behavior | Implementation | Regression | Status |
 | --- | --- | --- | --- |
 | Unqualified completion includes visible namespace and membership imports, aliases, short names and inherited imports, while native name lookup determines hiding and conflicts | `workspace/model/completion_candidates.go:CompletionCandidates`; `frontend/lsp/completion.go:Completion` | `TestCompletionVisibleImportedNames`, `TestCompletionRefreshesAfterImportEdits` | Covered by targeted visibility controls; general candidates are not claimed to be fully filtered by expected metatype |
+
+
+## DRYAS documentation editing contract
+
+These are editor presentation rules, not additional SysML semantic constraints.
+
+| Behavior | Implementation | Regression evidence | Status |
+| --- | --- | --- | --- |
+| Code completion is suppressed inside native comment/note tokens, including unfinished documentation; normal code contexts resume at token boundaries | `lsp/completion_context.go:completionInComment`, `lsp/completion.go:Completion` | `TestCompletionSuppressesCommentBodies`, `TestCompletionResumesOutsideCommentBodies` | Implemented |
+| Hover includes complete directly owned Documentation bodies and existing leading notes, without collecting descendants or siblings; library source text and definition ranges remain intact | `lsp/hover.go:symbolDocComments` | `TestHoverIncludesOwnedDocumentation`, `TestHoverOwnedDocumentationPreservesFullTextAndOwnership`, `TestHoverReferencedOwnedDocumentationAcrossFiles`, `TestHoverIncludesCompleteBundledVoltageDocumentation` | Implemented |

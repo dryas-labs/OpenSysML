@@ -19,7 +19,10 @@ func (s *Server) Completion(ctx context.Context, params *protocol.CompletionPara
 	c := &completionItems{seen: map[string]bool{}}
 
 	name := uriToName(params.TextDocument.URI)
-	doc := s.ws.Document(name)
+	doc := s.document(name)
+	if doc != nil && completionInComment(doc.Content, positionToOffset(doc.Content, params.Position)) {
+		return &protocol.CompletionList{Items: []protocol.CompletionItem{}}, nil
+	}
 	if doc != nil && doc.Scope != nil {
 		offset := positionToOffset(doc.Content, params.Position)
 		scope := enclosingScope(doc.Scope, offset)

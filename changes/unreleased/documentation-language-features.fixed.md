@@ -1,0 +1,1 @@
+- Suppress model-symbol completion inside documentation, comments and notes, including unfinished blocks. Show complete directly owned documentation in hover, including bundled library definitions, while preserving normal code completion and native definition locations.

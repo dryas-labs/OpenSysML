@@ -80,3 +80,17 @@ This source prepares the next development engine, `v0.9.2-dryas.3`. Existing
 Tracemgr 0.1.2 packages remain tied to `v0.9.2-dryas.2` until a separate product
 engine update is tested and packaged. Updating this branch does not silently
 replace an installed engine or alter historical benchmark results.
+
+## Documentation editing
+
+The language server uses native lexer token spans to suppress code completion
+inside regular comments, documentation and notes. An unfinished block remains
+documentation at EOF; completion resumes after a closing delimiter or line-note
+terminator. Delimiters inside strings and unrestricted names do not open comments.
+
+Ordinary hover combines existing leading notes with the complete documentation
+directly owned by the native declaration. Named, anonymous and multiple doc
+members are included; documentation belonging to nested or sibling declarations
+is not collected. Library records are matched to their parsed source declaration
+by their native source span. Definition locations and editor Ctrl-hover previews
+are unchanged.

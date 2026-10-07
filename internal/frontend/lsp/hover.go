@@ -62,7 +62,7 @@ func (s *Server) Hover(ctx context.Context, params *protocol.HoverParams) (*prot
 			signature += " : " + t
 		}
 	}
-	comments := leadingDocComments(content, sym.LeadingTrivia)
+	comments := s.symbolDocComments(sym)
 
 	rng := spanToRange(content, sym.DeclSpan)
 	return &protocol.Hover{
@@ -125,18 +125,43 @@ func (s *Server) hydratedTarget(doc string, ref resolve.Reference, offset int, t
 	return target, span
 }
 
-// symbolDocComments returns the comment trivia preceding a symbol's
-// declaration, when the document declaring it is loaded or is a bundled library
-// file.
+// symbolDocComments combines leading notes with the documentation directly
+// owned by this declaration. Nested declarations' documentation is not inherited.
 func (s *Server) symbolDocComments(sym *symbols.Symbol) []string {
-	if len(sym.LeadingTrivia) == 0 || sym.DocName == "" {
+	if sym.DocName == "" {
 		return nil
 	}
 	doc := s.document(sym.DocName)
 	if doc == nil {
 		return nil
 	}
-	return leadingDocComments(doc.Content, sym.LeadingTrivia)
+	// A library index may hold compact symbols. Its source document supplies
+	// the parsed owner at the same native declaration span, without resolving
+	// the name again or mutating the library index.
+	if parsed := symbolAtOffset(doc.Scope, sym.DeclSpan.Offset); parsed != nil && parsed.DeclSpan == sym.DeclSpan {
+		sym = parsed
+	}
+	comments := leadingDocComments(doc.Content, sym.LeadingTrivia)
+	appendBody := func(documentation *ast.Documentation) {
+		start, end := documentation.BodySpan.Offset, documentation.BodySpan.End()
+		if start < 0 || end > len(doc.Content) || start >= end {
+			return
+		}
+		body := strings.TrimSpace(string(doc.Content[start:end]))
+		if strings.HasPrefix(body, "/*") {
+			comments = append(comments, body)
+		}
+	}
+	if documentation, ok := sym.Decl.(*ast.Documentation); ok {
+		appendBody(documentation)
+	}
+	sym.Scope.ForEachMember(func(member *symbols.Symbol) bool {
+		if documentation, ok := member.Decl.(*ast.Documentation); ok {
+			appendBody(documentation)
+		}
+		return true
+	})
+	return comments
 }
 
 // hoverContents renders the hover as Markdown when the client supports it,
