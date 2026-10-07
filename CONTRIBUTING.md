@@ -4,6 +4,16 @@ Thank you for your interest in contributing to OpenSysML. This document describe
 development environment, the standards a change is expected to meet, and how contributions are
 reviewed and released.
 
+## DRYAS fork workflow
+
+In `dryas-labs/OpenSysML`, `main` is the default and integration branch. Create
+feature branches from `main` and target `main` with DRYAS pull requests. The fork
+keeps `develop` for upstream tracking and the existing import-fix branch for
+upstream PR #981. The upstream Git Flow and release conventions documented below
+apply to upstream contributions, not ordinary development in this fork.
+See [DRYAS maintenance](docs/project/dryas-maintenance.md) for branch and engine
+version policy.
+
 ## Development Setup
 
 ### Prerequisites

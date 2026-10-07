@@ -1,5 +1,10 @@
 # Open Source SysML v2 Implementation
 
+> This is the independently maintained DRYAS fork. `main` is the DRYAS development
+> branch; `develop` tracks upstream. See [DRYAS maintenance](docs/project/dryas-maintenance.md)
+> for fork-specific changes and build instructions. The badges and upstream
+> documentation below describe the Open-MBEE project.
+
 [![CircleCI](https://dl.circleci.com/status-badge/img/gh/Open-MBEE/OpenSysML/tree/main.svg?style=shield)](https://dl.circleci.com/status-badge/redirect/gh/Open-MBEE/OpenSysML/tree/main)
 [![Quality gate](https://sonarcloud.io/api/project_badges/measure?project=Open-MBEE_OpenSysML&metric=alert_status)](https://sonarcloud.io/summary/new_code?id=Open-MBEE_OpenSysML)
 [![Coverage](https://sonarcloud.io/api/project_badges/measure?project=Open-MBEE_OpenSysML&metric=coverage)](https://sonarcloud.io/component_measures?id=Open-MBEE_OpenSysML&metric=coverage)

@@ -11,10 +11,13 @@ It provides a hand-written lexer/parser, semantic engine, execution runtime, LSP
 ## DRYAS maintenance scope
 
 This checkout is the independently maintained product engine in
-`dryas-labs/OpenSysML`. Continue DRYAS work on `codex/dryas-0.9.2`; the upstream
-branch-and-PR workflow below applies when an upstream contribution is explicitly
-requested. Keep the existing Open-MBEE PR #981 separate. Further fixes belong in
-the DRYAS fork unless the maintainer requests another upstream submission.
+`dryas-labs/OpenSysML`. Its default and integration branch is `main`. Create
+DRYAS feature branches from `main` and target `main` with their pull requests.
+The fork keeps `develop` as an upstream tracking branch; updates there do not
+automatically enter `main`. The upstream branch-and-release workflow below applies
+only when an upstream contribution or release is explicitly requested. Keep the
+existing Open-MBEE PR #981 separate. Further fixes belong in the DRYAS fork unless
+the maintainer requests another upstream submission.
 
 Retain the upstream module path and licenses. Preserve downstream semantic fixes,
 query exports and completion behavior when integrating upstream work. Record the

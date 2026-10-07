@@ -4,6 +4,21 @@ This branch starts at upstream v0.9.2 and carries separately committed semantic
 fixes plus experimental read-only exports. It does not replace upstream develop.
 The upstream module path, licenses and notices are retained.
 
+## Branches
+
+- `main` is the DRYAS default and integration branch. It starts from the existing
+  `codex/dryas-0.9.2` maintenance history, including the reviewed import fixes,
+  native query exports and imported-name completion. New DRYAS work branches from
+  `main` and targets `main`.
+- `develop` follows the upstream development line. Upstream updates are reviewed
+  and integrated into `main` deliberately.
+- `codex/fix-import-clashes` remains dedicated to upstream PR #981.
+- `codex/dryas-0.9.2` is retained as the previous maintenance branch. Ongoing
+  product development moves to `main`.
+
+Changing the default branch does not upgrade the installed Tracemgr engine or
+publish a binary release. Product engine versions remain selected separately.
+
 The stdio-only methods DryasDescribeInherited, DryasFindBySpecialization and
 DryasDescribeProvenance reuse GetSymbolRequest and QueryResponse envelopes.
 They expose existing native effective members, feature types, transitive
