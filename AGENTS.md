@@ -8,6 +8,27 @@ It provides a hand-written lexer/parser, semantic engine, execution runtime, LSP
 
 ---
 
+## DRYAS maintenance scope
+
+This checkout is the independently maintained product engine in
+`dryas-labs/OpenSysML`. Continue DRYAS work on `codex/dryas-0.9.2`; the upstream
+branch-and-PR workflow below applies when an upstream contribution is explicitly
+requested. Keep the existing Open-MBEE PR #981 separate. Further fixes belong in
+the DRYAS fork unless the maintainer requests another upstream submission.
+
+Retain the upstream module path and licenses. Preserve downstream semantic fixes,
+query exports and completion behavior when integrating upstream work. Record the
+source commit of a backport and test the combined implementation; do not assume
+two branches remain synchronized. Distinct executable builds receive distinct
+DRYAS versions. Tracemgr selects a tested engine commit independently of this
+branch's latest commit.
+
+Historical M0 gates, adjudications and scores are not part of an engine merge.
+Changes to this fork's own corpus expectations require explicit case evidence and
+must remain distinguishable from those historical evaluation records.
+
+---
+
 ## 1. Golden Rules
 
 1. **Correctness over expedience.** No shortcuts, no stubs left behind, no lossy conversions. If a proper fix is large, do it properly or stop and flag it.
