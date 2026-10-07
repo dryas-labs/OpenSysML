@@ -108,7 +108,10 @@ func NewServer(impl pb.SysMLServiceServer) *Server {
 			return call(impl, ctx, dec, nil)
 		}
 	}
-	return &Server{methods: methods, impl: impl}
+	server := &Server{methods: methods, impl: impl}
+	registerDryas(server)
+	registerDryasImplicit(server)
+	return server
 }
 
 // Serve reads frames from r and writes answers to w until r reaches its end.
