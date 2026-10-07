@@ -889,7 +889,7 @@ func (m *Model) mostSpecificTypes(types []*symbols.Symbol) []*symbols.Symbol {
 	for _, t := range types {
 		redundant := false
 		for _, other := range types {
-			if !symbols.SameElement(other, t) && m.Conforms(other, t) {
+			if !symbols.SameElement(other, t) && m.Conforms(other, t) && !m.Conforms(t, other) {
 				redundant = true
 				break
 			}

@@ -157,13 +157,21 @@ func (cc *constraintChecker) checkViewSatisfyTarget(sym *symbols.Symbol) {
 	})
 }
 
-// checkSpecializationCycle flags a symbol that participates in a specialization
-// cycle. The diagnostic is anchored at the first generalization edge that leads
-// back to sym so the error points at the offending clause.
+// KerML 7.3.2.3 allows specialization cycles, but a valid type must still
+// reach Base::Anything. Check actual graph reachability, not Conforms, whose
+// universal-type shortcut would make this check vacuous.
 func (cc *constraintChecker) checkSpecializationCycle(sym *symbols.Symbol) {
 	selfSpan, selfLoop := cc.selfSpecialization(sym)
 	if !cc.model.HasSpecializationCycle(sym) && !selfLoop {
 		return
+	}
+	if semantics.IsAnything(sym) {
+		return
+	}
+	for _, general := range cc.model.AllSupertypes(sym) {
+		if semantics.IsAnything(general) {
+			return
+		}
 	}
 	span := sym.DeclSpan
 	if selfLoop {
@@ -180,7 +188,7 @@ func (cc *constraintChecker) checkSpecializationCycle(sym *symbols.Symbol) {
 	cc.diags = append(cc.diags, diag.Diagnostic{
 		Severity: diag.SeverityError,
 		Span:     span,
-		Message:  fmt.Sprintf("%s participates in a specialization cycle", sym.Name),
+		Message:  fmt.Sprintf("%s participates in a specialization cycle with no path to Base::Anything", sym.Name),
 		Code:     "specialization-cycle",
 		Source:   "constraint",
 	})

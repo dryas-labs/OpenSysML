@@ -11,8 +11,8 @@ func TestW7GUsageSubsettingItselfIsACycle(t *testing.T) {
 		"package C { part p4 subsets p4; }",
 		"package C { attribute a :> a; }",
 	} {
-		if !hasCode(constraintDiags(t, src), "specialization-cycle") {
-			t.Fatalf("expected a specialization cycle for %q", src)
+		if hasCode(constraintDiags(t, src), "specialization-cycle") {
+			t.Fatalf("base-reachable self-specialization must not be rejected for %q", src)
 		}
 	}
 }

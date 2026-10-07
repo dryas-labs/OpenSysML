@@ -39,22 +39,22 @@ func hasCode(diags []diag.Diagnostic, code string) bool {
 
 func TestConstraintDirectSpecializationCycle(t *testing.T) {
 	diags := constraintDiags(t, "part def A specializes A;")
-	if !hasCode(diags, "specialization-cycle") {
-		t.Fatalf("expected specialization-cycle diagnostic, got %v", diags)
+	if hasCode(diags, "specialization-cycle") {
+		t.Fatalf("base-reachable cycle is permitted by KerML 7.3.2.3, got %v", diags)
 	}
 }
 
 func TestConstraintTransitiveSpecializationCycle(t *testing.T) {
 	diags := constraintDiags(t, "part def A specializes B; part def B specializes A;")
-	// Both A and B are in the cycle; expect a diagnostic for each.
+	// Both retain the implicit base path; the cycle alone is no error.
 	n := 0
 	for _, d := range diags {
 		if d.Code == "specialization-cycle" {
 			n++
 		}
 	}
-	if n != 2 {
-		t.Fatalf("expected 2 specialization-cycle diagnostics, got %d: %v", n, diags)
+	if n != 0 {
+		t.Fatalf("expected no specialization-cycle diagnostics, got %d: %v", n, diags)
 	}
 }
 
@@ -75,8 +75,8 @@ func TestConstraintNestedMemberSpecializationCycle(t *testing.T) {
 			classifier D specializes A::B {}
 		}`,
 	} {
-		if !hasCode(constraintDiagsKerML(t, src), "specialization-cycle") {
-			t.Fatalf("expected a specialization cycle for %q", src)
+		if hasCode(constraintDiagsKerML(t, src), "specialization-cycle") {
+			t.Fatalf("base-reachable cycle must not be rejected for %q", src)
 		}
 	}
 }
