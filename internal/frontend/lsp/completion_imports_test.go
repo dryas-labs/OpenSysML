@@ -118,3 +118,26 @@ func TestCompletionRefreshesAfterImportEdits(t *testing.T) {
 		}
 	}
 }
+
+func TestCompletionThenTypingKeepsCrossFileNavigation(t *testing.T) {
+	ws := model.NewWorkspace()
+	server := NewServer(ws)
+	root := t.TempDir()
+	ws.SetOnDisk(filepath.Join(root, "definitions.sysml"), []byte(`package Components { port def PowerPort; part def Battery { port output : PowerPort; } }`))
+	name := filepath.Join(root, "system.sysml")
+	original := "package System {\n    private import Components::*;\n    part battery : Battery;\n}\n"
+	ws.Open(name, []byte(original), 1)
+	partial := strings.Replace(original, "}\n", "    part secondaryBattery : Ba;\n}\n", 1)
+	ws.Update(name, []byte(partial), 2)
+	offset := strings.Index(partial, "secondaryBattery : Ba") + len("secondaryBattery : Ba")
+	params := protocol.TextDocumentPositionParams{TextDocument: protocol.TextDocumentIdentifier{URI: uri.File(name)}, Position: offsetToPosition([]byte(partial), offset)}
+	if _, err := server.Completion(context.Background(), &protocol.CompletionParams{TextDocumentPositionParams: params}); err != nil {
+		t.Fatal(err)
+	}
+	accepted := strings.Replace(partial, "secondaryBattery : Ba;", "secondaryBattery : Battery;", 1)
+	ws.Update(name, []byte(accepted), 3)
+	locations, err := server.Definition(context.Background(), &protocol.DefinitionParams{TextDocumentPositionParams: params})
+	if err != nil || len(locations) != 1 || !strings.HasSuffix(locations[0].URI.Filename(), "definitions.sysml") {
+		t.Fatalf("accepted completion has no cross-file definition: %v %v", locations, err)
+	}
+}
