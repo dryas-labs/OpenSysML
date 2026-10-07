@@ -75,15 +75,13 @@ func (s *Server) Completion(ctx context.Context, params *protocol.CompletionPara
 				}
 			}
 		}
-		for ; scope != nil; scope = scope.Parent() {
-			for _, sym := range scope.Members() {
-				c.addSymbol(s, sym)
-			}
+		for _, candidate := range s.ws.CompletionCandidates(scope) {
+			c.addNamedSymbol(s, candidate.Name, candidate.Sym)
 		}
-	}
-
-	for _, sym := range s.ws.TopLevelSymbols(name) {
-		c.addSymbol(s, sym)
+	} else {
+		for _, sym := range s.ws.TopLevelSymbols(name) {
+			c.addSymbol(s, sym)
+		}
 	}
 	for _, kw := range source.Keywords() {
 		c.add(protocol.CompletionItem{

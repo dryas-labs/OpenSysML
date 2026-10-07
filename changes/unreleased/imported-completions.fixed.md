@@ -1,0 +1,1 @@
+- Offer imported, aliased and inherited names in unqualified completion using native name resolution; keep private and clashing imported names hidden.

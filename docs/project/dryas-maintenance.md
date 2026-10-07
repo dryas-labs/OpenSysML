@@ -26,11 +26,19 @@ benchmark does not establish full standard conformance or release qualification.
 Use the Go version required by go.mod. For a reproducible development binary:
 
 ```sh
-go build -trimpath -ldflags="-X main.Version=v0.9.2-dryas.1" -o bin/sysml ./cmd/sysml
-go build -trimpath -ldflags="-X main.Version=v0.9.2-dryas.1" -o bin/sysml-grpc ./cmd/sysml-grpc
-go build -trimpath -ldflags="-X main.Version=v0.9.2-dryas.1" -o bin/sysml-lsp ./cmd/sysml-lsp
+go build -trimpath -ldflags="-X main.Version=v0.9.2-dryas.2" -o bin/sysml ./cmd/sysml
+go build -trimpath -ldflags="-X main.Version=v0.9.2-dryas.2" -o bin/sysml-grpc ./cmd/sysml-grpc
+go build -trimpath -ldflags="-X main.Version=v0.9.2-dryas.2" -o bin/sysml-lsp ./cmd/sysml-lsp
 ```
 
 This is a development version label, not an upstream release or a published tag.
 See CONTRIBUTING.md for the full build, vet, formatting, test, corpus and CI gates.
 Windows test failures and absent corpora must be reported rather than hidden.
+
+## Unqualified completion
+
+The development build also routes ordinary completion through native visible-name
+enumeration and name lookup. Imported definitions, aliases and short names are
+offered without exposing private members or hidden clashing imports. Completion
+candidates remain a general visible-name list; this change does not claim exhaustive
+metatype filtering for every grammar position.
