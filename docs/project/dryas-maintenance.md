@@ -13,8 +13,6 @@ The upstream module path, licenses and notices are retained.
 - `develop` follows the upstream development line. Upstream updates are reviewed
   and integrated into `main` deliberately.
 - `codex/fix-import-clashes` remains dedicated to upstream PR #981.
-- `codex/dryas-0.9.2` is retained as the previous maintenance branch. Ongoing
-  product development moves to `main`.
 
 Changing the default branch does not upgrade the installed Tracemgr engine or
 publish a binary release. Product engine versions remain selected separately.
