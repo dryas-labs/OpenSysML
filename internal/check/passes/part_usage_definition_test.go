@@ -17,7 +17,8 @@ func partUsageFindings(t *testing.T, src string) []string {
 	return out
 }
 
-func TestPartUsagePartDefinitionRejectsNonPartTypes(t *testing.T) {
+// SysML 7.11.2 retains the implicit Part typing in addition to written types.
+func TestPartUsagePartDefinitionRetainsImplicitPartTypes(t *testing.T) {
 	cases := []struct {
 		name string
 		src  string
@@ -31,7 +32,7 @@ func TestPartUsagePartDefinitionRejectsNonPartTypes(t *testing.T) {
 		part bread : Start;
 	}
 }`,
-			want: []string{"4: " + msgPartUsagePartDefinition},
+			want: nil,
 		},
 		{
 			name: "subsetting an item-typed part",
@@ -40,14 +41,14 @@ part def D {
 	part a : I;
 	part b :> a;
 }`,
-			want: []string{"3: " + msgPartUsagePartDefinition, "4: " + msgPartUsagePartDefinition},
+			want: nil,
 		},
 		{
 			name: "subsetting an item usage typed by an item def",
 			src: `item def I;
 item i : I;
 part p :> i;`,
-			want: []string{"3: " + msgPartUsagePartDefinition},
+			want: nil,
 		},
 		{
 			name: "redefinition inheriting only an item def",
@@ -58,13 +59,13 @@ part def A {
 part def B :> A {
 	part :>> x;
 }`,
-			want: []string{"3: " + msgPartUsagePartDefinition, "6: " + msgPartUsagePartDefinition},
+			want: nil,
 		},
 		{
 			name: "part typed by a flow def",
 			src: `flow def F;
 part p : F;`,
-			want: []string{"2: " + msgPartUsagePartDefinition},
+			want: nil,
 		},
 		{
 			name: "variant part typed by an item def",
@@ -75,7 +76,7 @@ part p : PD {
 		variant part v : I;
 	}
 }`,
-			want: []string{"5: " + msgPartUsagePartDefinition},
+			want: nil,
 		},
 	}
 	for _, tc := range cases {

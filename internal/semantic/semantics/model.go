@@ -851,7 +851,10 @@ func (m *Model) FeatureTypeSet(sym *symbols.Symbol) []*symbols.Symbol {
 		bases := m.implicitBases(f)
 		for _, super := range m.DirectSupertypes(f) {
 			switch {
-			case containsElement(bases, super):
+			case containsElement(bases, super) && f.Kind != symbols.SymbolPartUsage:
+				// Preserve the existing derivation for other feature kinds. A part
+				// usage retains its kind-implied Part typing even with an explicit
+				// item definition (SysML 7.11.2 and 8.4.7.2).
 			case super.IsFeature():
 				visit(super)
 			case !containsElement(types, super):
