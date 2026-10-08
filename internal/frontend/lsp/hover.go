@@ -12,6 +12,7 @@ import (
 	"github.com/Open-MBEE/OpenSysML/internal/semantic/symbols"
 	"github.com/Open-MBEE/OpenSysML/internal/syntax/ast"
 	"github.com/Open-MBEE/OpenSysML/internal/syntax/source"
+	"github.com/Open-MBEE/OpenSysML/internal/workspace/model"
 )
 
 // Hover returns type/kind information for the declaration under the cursor, in
@@ -131,10 +132,15 @@ func (s *Server) symbolDocComments(sym *symbols.Symbol) []string {
 	if sym.DocName == "" {
 		return nil
 	}
-	doc := s.document(sym.DocName)
+	return declarationDocComments(s.document(sym.DocName), sym)
+}
+
+// declarationDocComments is shared by hover and selected completion details.
+func declarationDocComments(doc *model.Document, sym *symbols.Symbol) []string {
 	if doc == nil {
 		return nil
 	}
+	doc = doc.ParsedSnapshot()
 	// A library index may hold compact symbols. Its source document supplies
 	// the parsed owner at the same native declaration span, without resolving
 	// the name again or mutating the library index.

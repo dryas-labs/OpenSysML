@@ -45,9 +45,9 @@ or release qualification.
 Use the Go version required by go.mod. For a reproducible development binary:
 
 ```sh
-go build -trimpath -ldflags="-X main.Version=v0.9.2-dryas.3" -o bin/sysml ./cmd/sysml
-go build -trimpath -ldflags="-X main.Version=v0.9.2-dryas.3" -o bin/sysml-grpc ./cmd/sysml-grpc
-go build -trimpath -ldflags="-X main.Version=v0.9.2-dryas.3" -o bin/sysml-lsp ./cmd/sysml-lsp
+go build -trimpath -ldflags="-X main.Version=v0.9.2-dryas.4" -o bin/sysml ./cmd/sysml
+go build -trimpath -ldflags="-X main.Version=v0.9.2-dryas.4" -o bin/sysml-grpc ./cmd/sysml-grpc
+go build -trimpath -ldflags="-X main.Version=v0.9.2-dryas.4" -o bin/sysml-lsp ./cmd/sysml-lsp
 ```
 
 This is a development version label, not an upstream release or a published tag.
@@ -76,8 +76,8 @@ integrated implementation produce identical diagnostic messages over the pinned
 2026-08 pilot corpora. The fork-specific expectation record now reflects those
 already reviewed downstream fixes; see [the corpus note](imported-name-clashes.md).
 
-This source prepares the next development engine, `v0.9.2-dryas.3`. Existing
-Tracemgr 0.1.2 packages remain tied to `v0.9.2-dryas.2` until a separate product
+This source prepares the next development engine, `v0.9.2-dryas.4`. Existing
+Tracemgr 0.1.4 packages remain tied to `v0.9.2-dryas.3` until a separate product
 engine update is tested and packaged. Updating this branch does not silently
 replace an installed engine or alter historical benchmark results.
 
@@ -94,3 +94,20 @@ members are included; documentation belonging to nested or sibling declarations
 is not collected. Library records are matched to their parsed source declaration
 by their native source span. Definition locations and editor Ctrl-hover previews
 are unchanged.
+
+## Selected completion details
+
+Clients advertising documentation resolve support receive a compact list and a
+session-local handle. `completionItem/resolve` reads the selected declaration's
+native source and supplies its signature, visible spelling, actual declaration
+name, source filename, and complete leading/owned documentation. Aliases and short
+names retain their offered insertion spelling. Standard-library documentation is
+loaded on demand; a closed workspace record is parsed as an immutable snapshot,
+without replacing its indexed symbols. Hover uses the same documentation helper.
+
+Handles are retained for eight lists, contain no host paths, and expire on restart
+or model-context changes. Continued typing of the same identifier is permitted;
+an edited declaration, import, other document, or an expired list requires fresh
+completion. Resolve changes only `documentation`; it never adds imports, changes
+insertion text or infers missing physical semantics. Clients without documentation
+resolve retain eager documentation for already parsed workspace declarations.
