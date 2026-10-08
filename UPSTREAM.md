@@ -61,3 +61,19 @@ implicitly claimed to have a complete translation.
 
 This records maintenance requirements; it is not a claim that every existing
 packaging target has completed a release license inventory.
+
+## Fork CI
+
+The DRYAS Engine CI workflow runs on pull requests targeting main, pushes to main
+and common development branches, and manual dispatch. Windows and Linux both build
+all Go packages, check formatting and maintenance documents, run the native downstream
+regressions without skipped cases, and build and launch the three engine executables.
+Linux runs full-module vet; Windows vets the integration packages because unrelated
+upstream FIFO tests do not compile there. The CI development version includes its
+source revision and is not a supported Systrace release identifier.
+
+Run `python scripts/dryas-ci.py` locally with Go on PATH; add `--build` to build and
+smoke-test executables. The inherited PR workflow remains unchanged and covers the
+broader upstream suite. A successful downstream gate does not mean that full suite
+passed, and does not close known upstream-platform or self-model failures. This
+workflow does not publish releases or distribute engine binaries.

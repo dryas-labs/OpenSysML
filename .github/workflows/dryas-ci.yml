@@ -1,0 +1,60 @@
+# Added by DRYAS maintainers for the independently maintained fork.
+name: DRYAS Engine CI
+
+on:
+  push:
+    branches: [main, "codex/**", "ci/**", "fix/**", "feat/**", "docs/**"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: dryas-engine-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  engine:
+    name: DRYAS engine (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: actions/setup-go@v7.0.0
+        with:
+          go-version: "1.25.x"
+          cache: true
+      - name: Download modules
+        run: go mod download
+      - name: Check Go formatting
+        shell: bash
+        run: |
+          unformatted=$(gofmt -l .)
+          if [ -n "$unformatted" ]; then
+            printf '%s\n' "$unformatted"
+            exit 1
+          fi
+      - name: Check maintenance documentation
+        shell: bash
+        run: |
+          python scripts/changelog.py check
+          python scripts/check-doc-links.py
+          python scripts/check-doc-ids.py
+      - name: Build all packages
+        run: go build ./...
+      - name: Vet all packages on Linux
+        if: runner.os == 'Linux'
+        run: go vet ./...
+      - name: Vet integration packages on Windows
+        if: runner.os == 'Windows'
+        run: go vet ./internal/check/passes ./internal/frontend/lsp ./internal/frontend/grpc ./internal/frontend/stdiorpc ./internal/semantic/resolve ./internal/semantic/semantics
+      - name: Run downstream regression tests
+        run: python scripts/dryas-ci.py
+      - name: Build and smoke-test engine executables
+        run: python scripts/dryas-ci.py --build
