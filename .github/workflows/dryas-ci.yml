@@ -3,7 +3,7 @@ name: DRYAS Engine CI
 
 on:
   push:
-    branches: [main, "codex/**", "ci/**", "fix/**", "feat/**", "docs/**"]
+    branches: [main]
   pull_request:
     branches: [main]
   workflow_dispatch:

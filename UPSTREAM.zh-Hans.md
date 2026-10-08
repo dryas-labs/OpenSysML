@@ -48,7 +48,8 @@ Systrace 测试。更新状态时记录上游 issue/PR、已知发行版、下�
 
 ## Fork CI
 
-DRYAS Engine CI 在面向 main 的 PR、main 及常用开发分支的推送和手动触发时运行。
+DRYAS Engine CI 在面向 main 的 PR、推送 main 和手动触发时运行。
+开发分支通过 PR 接受检查，避免同一提交重复运行。
 Windows 与 Linux 均构建所有 Go 包，检查格式和维护文档，运行不允许跳过的原生下游回归测试，
 并构建、启动三个引擎程序。Linux 对整个模块运行 vet；Windows 对集成相关包运行 vet，
 因为无关的上游 FIFO 测试不能在 Windows 编译。CI 开发版本包含源码提交，不是 Systrace 支持的发行版本标识。

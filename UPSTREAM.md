@@ -64,8 +64,8 @@ packaging target has completed a release license inventory.
 
 ## Fork CI
 
-The DRYAS Engine CI workflow runs on pull requests targeting main, pushes to main
-and common development branches, and manual dispatch. Windows and Linux both build
+The DRYAS Engine CI workflow runs on pull requests targeting main, pushes to main,
+and manual dispatch. Branch pushes are checked through their PR to avoid duplicate runs. Windows and Linux both build
 all Go packages, check formatting and maintenance documents, run the native downstream
 regressions without skipped cases, and build and launch the three engine executables.
 Linux runs full-module vet; Windows vets the integration packages because unrelated
