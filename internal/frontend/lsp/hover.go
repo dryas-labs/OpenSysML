@@ -1,3 +1,4 @@
+// Modified by DRYAS maintainers: include documentation owned by the resolved declaration.
 package lsp
 
 import (

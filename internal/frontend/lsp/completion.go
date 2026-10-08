@@ -1,3 +1,4 @@
+// Modified by DRYAS maintainers: enumerate imported names and support native documentation resolution.
 package lsp
 
 import (

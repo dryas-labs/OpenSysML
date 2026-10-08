@@ -1,2 +1,3 @@
+# Modified by DRYAS maintainers: remove cycle-only diagnostics for base-reachable specializations.
 6:20 warning [constraint/subsetting-multiplicity] Subsetting/redefining feature should not have larger multiplicity upper bound
 9:11 error [constraint/multiplicity-range] multiplicity lower bound exceeds upper bound on lo

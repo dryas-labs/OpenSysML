@@ -1,3 +1,4 @@
+// Modified by DRYAS maintainers: retain resolved typing diagnostics after unrelated name-resolution errors.
 package passes
 
 import (

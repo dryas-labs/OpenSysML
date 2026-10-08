@@ -1,3 +1,4 @@
+// Modified by DRYAS maintainers: respect hidden and conflicting imports during qualified lookup.
 package resolve
 
 import (

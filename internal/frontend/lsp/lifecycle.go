@@ -1,3 +1,4 @@
+// Modified by DRYAS maintainers: expire completion handles when document state changes.
 package lsp
 
 import (

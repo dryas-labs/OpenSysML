@@ -1,3 +1,4 @@
+// Modified by DRYAS maintainers: track imported-membership visibility during lookup.
 package resolve
 
 import (

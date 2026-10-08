@@ -1,3 +1,4 @@
+// Modified by DRYAS maintainers: store completion-resolution state and advertise resolve support.
 package lsp
 
 import (

@@ -1,3 +1,4 @@
+// Modified by DRYAS maintainers: respect import visibility during invocation lookup.
 package resolve
 
 import (

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// Added by DRYAS maintainers for the downstream OpenSysML implementation.
 // DRYAS read-only bridge to existing native calculations. No semantic rule changes.
 package semantics
 

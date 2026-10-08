@@ -2,7 +2,9 @@
 
 This branch starts at upstream v0.9.2 and carries separately committed semantic
 fixes plus experimental read-only exports. It does not replace upstream develop.
-The upstream module path, licenses and notices are retained.
+The upstream module path, licenses and notices are retained. See
+[license and distribution requirements](../../UPSTREAM.md#license-and-attribution-maintenance)
+and the [downstream change record](../../CHANGES.md).
 
 ## Branches
 
@@ -14,7 +16,7 @@ The upstream module path, licenses and notices are retained.
   and integrated into `main` deliberately.
 - `codex/fix-import-clashes` remains dedicated to upstream PR #981.
 
-Changing the default branch does not upgrade the installed Tracemgr engine or
+Changing the default branch does not upgrade the installed Systrace engine or
 publish a binary release. Product engine versions remain selected separately.
 
 The stdio-only methods DryasDescribeInherited, DryasFindBySpecialization and
@@ -35,7 +37,8 @@ tests before this protocol can be advertised as a general-purpose public service
 DRYAS adapters, evaluation cases, engineering rules and UI stay in the DRYAS repository.
 `dryas-labs/OpenSysML` is maintained as the product engine in its own right.
 The existing upstream submission is [Open-MBEE PR #981](https://github.com/Open-MBEE/OpenSysML/pull/981).
-Other fixes remain in this fork; new upstream PRs are outside the current scope.
+Suitable fixes and general improvements will continue to be proposed upstream.
+Acceptance and release timing remain upstream decisions; see [contribution status](../../UPSTREAM.md).
 Upstream work is integrated selectively and tested with the downstream changes.
 A successful development benchmark does not establish full standard conformance
 or release qualification.
@@ -76,10 +79,9 @@ integrated implementation produce identical diagnostic messages over the pinned
 2026-08 pilot corpora. The fork-specific expectation record now reflects those
 already reviewed downstream fixes; see [the corpus note](imported-name-clashes.md).
 
-This source prepares the next development engine, `v0.9.2-dryas.4`. Existing
-Tracemgr 0.1.4 packages remain tied to `v0.9.2-dryas.3` until a separate product
-engine update is tested and packaged. Updating this branch does not silently
-replace an installed engine or alter historical benchmark results.
+This source includes the development engine changes used by Systrace with
+`v0.9.2-dryas.4`. Systrace selects and tests an exact source revision independently.
+Updating this branch does not replace an installed engine.
 
 ## Documentation editing
 

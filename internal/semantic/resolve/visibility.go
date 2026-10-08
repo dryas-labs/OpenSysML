@@ -1,3 +1,4 @@
+// Modified by DRYAS maintainers: apply downstream imported-membership visibility handling.
 package resolve
 
 import (

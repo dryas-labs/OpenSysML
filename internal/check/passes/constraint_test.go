@@ -1,3 +1,4 @@
+// Modified by DRYAS maintainers: cover permitted base-reachable specialization cycles.
 package passes
 
 import (
