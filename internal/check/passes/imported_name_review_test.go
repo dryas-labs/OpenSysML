@@ -1,4 +1,6 @@
 // SPDX-License-Identifier: Apache-2.0
+// Added by DRYAS maintainers for the downstream OpenSysML implementation.
+// SPDX-License-Identifier: Apache-2.0
 
 package passes
 

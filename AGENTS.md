@@ -1,5 +1,7 @@
 # AGENTS.md — Guide for AI Agents Working on OpenSysML
 
+> Modified by DRYAS maintainers: downstream contribution and license-maintenance instructions.
+
 > **Prime directive:** If I wanted hacks, I'd write it myself. **Don't ever choose hacky over correct.**
 > Fix root causes upstream, not symptoms. Never weaken, skip, or delete tests to make them pass.
 
@@ -16,14 +18,21 @@ DRYAS feature branches from `main` and target `main` with their pull requests.
 The fork keeps `develop` as an upstream tracking branch; updates there do not
 automatically enter `main`. The upstream branch-and-release workflow below applies
 only when an upstream contribution or release is explicitly requested. Keep the
-existing Open-MBEE PR #981 separate. Further fixes belong in the DRYAS fork unless
-the maintainer requests another upstream submission.
+existing Open-MBEE PR #981 separate. Maintain fixes in the DRYAS fork and prepare suitable general improvements for upstream.
+Submit new upstream PRs only when the maintainer authorizes posting.
+
+Use the maintainer-approved GitHub identity for Git author and committer metadata.
+Do not substitute a generic contributor identity for privacy; public GitHub attribution is permitted.
+
+Follow UPSTREAM.md for contribution and redistribution requirements. Add file-level
+modification notices to changed upstream files; preserve original attribution, LICENSE
+and applicable NOTICE content. Keep new maintenance documentation in English and zh-Hans.
 
 Retain the upstream module path and licenses. Preserve downstream semantic fixes,
 query exports and completion behavior when integrating upstream work. Record the
 source commit of a backport and test the combined implementation; do not assume
 two branches remain synchronized. Distinct executable builds receive distinct
-DRYAS versions. Tracemgr selects a tested engine commit independently of this
+DRYAS versions. Systrace selects a tested engine commit independently of this
 branch's latest commit.
 
 Historical M0 gates, adjudications and scores are not part of an engine merge.

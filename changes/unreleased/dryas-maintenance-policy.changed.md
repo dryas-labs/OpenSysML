@@ -1,0 +1,1 @@
+- **Document downstream support, upstream contributions and distribution responsibilities.** Preserve upstream attribution and add file-level modification notices for DRYAS changes.

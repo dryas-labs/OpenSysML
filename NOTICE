@@ -1,0 +1,18 @@
+DRYAS-maintained OpenSysML
+
+This distribution is derived from Open-MBEE/OpenSysML.
+Upstream: https://github.com/Open-MBEE/OpenSysML
+Copyright 2026 Open-MBEE
+
+The OpenSysML engine source is licensed under Apache License 2.0; see LICENSE.
+DRYAS maintainers have modified this distribution. Modified upstream files
+carry modification notices. Downstream changes are described in CHANGES.md
+and changes/unreleased/. Upstream ownership and attribution are retained.
+This derivative is independently maintained and does not imply endorsement
+by Open-MBEE or other upstream contributors.
+
+The bundled standard library has separate terms. Preserve and distribute
+internal/workspace/libs/stdlib/NOTICE and LICENSE-EPL-2.0 with the applicable
+library content. That NOTICE distinguishes OMG-derived EPL-2.0 library files
+from Apache-2.0 OpenSysML library extensions. This file does not relicense them
+or replace third-party dependency notices.

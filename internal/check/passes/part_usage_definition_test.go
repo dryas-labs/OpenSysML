@@ -1,3 +1,4 @@
+// Modified by DRYAS maintainers: cover kind-implied typing of part usages.
 package passes
 
 import (

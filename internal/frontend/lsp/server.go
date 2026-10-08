@@ -1,3 +1,4 @@
+// Modified by DRYAS maintainers: store completion-resolution state and advertise resolve support.
 package lsp
 
 import (
@@ -55,6 +56,8 @@ type Server struct {
 	// completionMarkdown records that the client advertised Markdown for
 	// completion item documentation.
 	completionMarkdown bool
+	completionResolve  bool
+	completionBatches  []completionBatch
 	// crossDocument records that the client advertised CrossDocumentCapability.
 	crossDocument bool
 }

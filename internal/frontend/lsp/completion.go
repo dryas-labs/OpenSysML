@@ -1,3 +1,4 @@
+// Modified by DRYAS maintainers: enumerate imported names and support native documentation resolution.
 package lsp
 
 import (
@@ -10,20 +11,29 @@ import (
 	"github.com/Open-MBEE/OpenSysML/internal/syntax/ast"
 	"github.com/Open-MBEE/OpenSysML/internal/syntax/lexer"
 	"github.com/Open-MBEE/OpenSysML/internal/syntax/source"
+	"github.com/Open-MBEE/OpenSysML/internal/workspace/model"
 )
 
 // Completion implements textDocument/completion: members of what a member
 // access names, else the names in scope plus library names and keywords.
 // Prefix filtering is left to the client.
 func (s *Server) Completion(ctx context.Context, params *protocol.CompletionParams) (*protocol.CompletionList, error) {
-	c := &completionItems{seen: map[string]bool{}}
+	c := &completionItems{seen: map[string]bool{}, entries: map[string]completionEntry{}, lazy: s.lazyCompletion(), state: s.ws.CompletionSnapshot()}
 
 	name := uriToName(params.TextDocument.URI)
-	doc := s.ws.Document(name)
+	doc := s.document(name)
+	if doc != nil {
+		offset := positionToOffset(doc.Content, params.Position)
+		c.context = completionContext{document: doc, offset: offset, wordStart: identStart(doc.Content, offset), state: c.state}
+	}
+	if doc != nil && completionInComment(doc.Content, positionToOffset(doc.Content, params.Position)) {
+		return &protocol.CompletionList{Items: []protocol.CompletionItem{}}, nil
+	}
 	if doc != nil && doc.Scope != nil {
 		offset := positionToOffset(doc.Content, params.Position)
 		scope := enclosingScope(doc.Scope, offset)
 		if path, ok := memberPathBefore(doc.Content, offset); ok {
+			c.prefix = string(doc.Content[memberPathStart(doc.Content, offset):identStart(doc.Content, offset)])
 			members := s.ws.MembersOnPath(scope, path)
 			// A qualified name in a calc usage's type position still names a
 			// query, so the package's members are filtered the same way.
@@ -33,7 +43,7 @@ func (s *Server) Completion(ctx context.Context, params *protocol.CompletionPara
 			for _, sym := range members {
 				c.addSymbol(s, sym)
 			}
-			return c.list(), nil
+			return s.finishCompletion(ctx, c)
 		}
 		// A declaration in a metadata annotation body redefines a feature of
 		// the metadata definition, so only its features are offered there. A
@@ -42,7 +52,7 @@ func (s *Server) Completion(ctx context.Context, params *protocol.CompletionPara
 			for _, sym := range s.ws.MetadataBodyMembers(body) {
 				c.addSymbol(s, sym)
 			}
-			return c.list(), nil
+			return s.finishCompletion(ctx, c)
 		}
 		// The type of a calc usage inside a document definition is a query, so
 		// only query definitions (and the packages qualifying one) are offered.
@@ -57,7 +67,7 @@ func (s *Server) Completion(ctx context.Context, params *protocol.CompletionPara
 					c.addSymbol(s, sym)
 				}
 			}
-			return c.list(), nil
+			return s.finishCompletion(ctx, c)
 		}
 		// Inside a query-typed calc usage, a binding names one of the query's
 		// parameters; its value resolves in the enclosing scope chain as usual.
@@ -71,7 +81,7 @@ func (s *Server) Completion(ctx context.Context, params *protocol.CompletionPara
 					for _, sym := range params {
 						c.addSymbol(s, sym)
 					}
-					return c.list(), nil
+					return s.finishCompletion(ctx, c)
 				}
 			}
 		}
@@ -100,14 +110,19 @@ func (s *Server) Completion(ctx context.Context, params *protocol.CompletionPara
 		})
 	}
 
-	return c.list(), nil
+	return s.finishCompletion(ctx, c)
 }
 
 // completionItems accumulates items, keeping the first offered under a label so
 // a nearer declaration wins over an inherited or library name.
 type completionItems struct {
-	seen  map[string]bool
-	items []protocol.CompletionItem
+	seen    map[string]bool
+	items   []protocol.CompletionItem
+	entries map[string]completionEntry
+	lazy    bool
+	state   *model.CompletionSnapshot
+	context completionContext
+	prefix  string
 }
 
 func (c *completionItems) add(item protocol.CompletionItem) {
@@ -124,33 +139,29 @@ func (c *completionItems) addSymbol(s *Server, sym *symbols.Symbol) {
 	if sym == nil {
 		return
 	}
-	item := protocol.CompletionItem{
-		Label:  leafName(sym.Name),
-		Kind:   completionKind(sym.Kind),
-		Detail: completionDetail(sym),
-	}
-	if doc, ok := s.symbolDocumentation(sym); ok {
-		item.Documentation = doc
-	}
-	c.add(item)
-	if short := sym.ShortName; short != "" && short != item.Label {
-		item.Label = short
-		c.add(item)
+	c.addNamedSymbol(s, leafName(sym.Name), sym)
+	if short := sym.ShortName; short != "" && short != leafName(sym.Name) {
+		c.addNamedSymbol(s, short, sym)
 	}
 }
 
-// addNamedSymbol offers sym under a visible spelling of its own — an alias name
-// rather than the target's declared name.
+// addNamedSymbol retains the visible spelling while binding optional details
+// to the native declaration and its alias target, without loading source text.
 func (c *completionItems) addNamedSymbol(s *Server, label string, sym *symbols.Symbol) {
-	if sym == nil || label == "" {
+	if sym == nil || label == "" || c.seen[label] {
 		return
 	}
-	item := protocol.CompletionItem{
-		Label:  label,
-		Kind:   completionKind(sym.Kind),
-		Detail: completionDetail(sym),
-	}
-	if doc, ok := s.symbolDocumentation(sym); ok {
+	item := protocol.CompletionItem{Label: label, Kind: completionKind(sym.Kind), Detail: completionDetail(sym)}
+	if c.lazy {
+		target := s.ws.CompletionTarget(sym)
+		if target != nil && target.DocName != "" && target.DeclSpan.Len > 0 {
+			c.entries[label] = completionEntry{
+				label: label, reference: c.prefix + label,
+				original: completionSource{symbol: sym, document: s.ws.Document(sym.DocName)},
+				target:   completionSource{symbol: target, document: s.ws.Document(target.DocName)},
+			}
+		}
+	} else if doc, ok := s.symbolDocumentation(sym); ok {
 		item.Documentation = doc
 	}
 	c.add(item)
@@ -160,21 +171,21 @@ func (c *completionItems) list() *protocol.CompletionList {
 	return &protocol.CompletionList{IsIncomplete: false, Items: c.items}
 }
 
-// symbolDocumentation returns the comment trivia preceding a symbol's
+// symbolDocumentation returns the leading notes and directly owned docs of a symbol's
 // declaration, when the document declaring it is loaded; a declaration held as
 // its record is listed without, since completing must not parse every closed
 // file a candidate comes from. A client that renders
 // Markdown is sent the comments as prose, as hover does, rather than the source
 // with its delimiters.
 func (s *Server) symbolDocumentation(sym *symbols.Symbol) (protocol.MarkupContent, bool) {
-	if len(sym.LeadingTrivia) == 0 || sym.DocName == "" {
+	if sym.DocName == "" {
 		return protocol.MarkupContent{}, false
 	}
 	doc := s.ws.Document(sym.DocName)
-	if doc == nil {
+	if doc == nil || doc.Recorded() {
 		return protocol.MarkupContent{}, false
 	}
-	comments := leadingDocComments(doc.Content, sym.LeadingTrivia)
+	comments := declarationDocComments(doc, sym)
 	if s.wantsMarkdownCompletion() {
 		prose := docCommentProse(comments)
 		if prose == "" {

@@ -1,5 +1,7 @@
 # SysML v2 Specification Compliance
 
+> Modified by DRYAS maintainers: downstream semantic fixes and their evidence.
+
 **Purpose:** Document implementation coverage of SysML v2 / KerML behavioral semantics. UML 2.5.1 is cited only as reference semantics for an OpenSysML extension the SysML v2 notation has no production for and the bundled KerML semantic library (`internal/workspace/libs/stdlib/`) no performance for.
 
 **Related:** [`TESTING.md`](../internals/testing.md) (test contracts), [`ARCHITECTURE.md`](../internals/architecture.md) (runtime architecture), [grammar-coverage.md](grammar-coverage.md) (which OMG grammar productions our test inputs exercise — input-presence evidence, which implies nothing about compliance either way)
@@ -3345,3 +3347,14 @@ SysML v2 defines *evaluation* of a constraint, requirement or `assert satisfy` a
 | Behavior | Implementation | Regression | Status |
 | --- | --- | --- | --- |
 | Unqualified completion includes visible namespace and membership imports, aliases, short names and inherited imports, while native name lookup determines hiding and conflicts | `workspace/model/completion_candidates.go:CompletionCandidates`; `frontend/lsp/completion.go:Completion` | `TestCompletionVisibleImportedNames`, `TestCompletionRefreshesAfterImportEdits` | Covered by targeted visibility controls; general candidates are not claimed to be fully filtered by expected metatype |
+
+
+## DRYAS documentation editing contract
+
+These are editor presentation rules, not additional SysML semantic constraints.
+
+| Behavior | Implementation | Regression evidence | Status |
+| --- | --- | --- | --- |
+| Code completion is suppressed inside native comment/note tokens, including unfinished documentation; normal code contexts resume at token boundaries | `lsp/completion_context.go:completionInComment`, `lsp/completion.go:Completion` | `TestCompletionSuppressesCommentBodies`, `TestCompletionResumesOutsideCommentBodies` | Implemented |
+| Hover includes complete directly owned Documentation bodies and existing leading notes, without collecting descendants or siblings; library source text and definition ranges remain intact | `lsp/hover.go:symbolDocComments` | `TestHoverIncludesOwnedDocumentation`, `TestHoverOwnedDocumentationPreservesFullTextAndOwnership`, `TestHoverReferencedOwnedDocumentationAcrossFiles`, `TestHoverIncludesCompleteBundledVoltageDocumentation` | Implemented |
+| Selected completion details use native declarations and shared owned-doc extraction, including aliases, short names, bundled and closed sources; handles bind to their original context and preserve insertion fields | `lsp/completion_resolve.go:CompletionResolve`, `model/completion_presentation.go` | `TestCompletionResolveBundledDocumentation`, `TestCompletionResolveKeepsAliasAndShortNameInsertion`, `TestCompletionResolveReadsRecordedSourceWithoutReplacingIndex`, `TestCompletionResolveRejectsChangedContext`, same-file typing and invalid-handle tests | Implemented for clients advertising documentation resolve support; legacy clients retain loaded-source docs |

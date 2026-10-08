@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: Apache-2.0
+// Added by DRYAS maintainers for the downstream OpenSysML implementation.
 // DRYAS experimental methods use existing protobuf envelopes over stdio only.
 package stdiorpc
 

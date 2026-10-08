@@ -1,5 +1,7 @@
 # Contributing to OpenSysML
 
+> Modified by DRYAS maintainers: DRYAS fork workflow and redistribution requirements.
+
 Thank you for your interest in contributing to OpenSysML. This document describes how to set up a
 development environment, the standards a change is expected to meet, and how contributions are
 reviewed and released.
@@ -13,6 +15,9 @@ upstream PR #981. The upstream Git Flow and release conventions documented below
 apply to upstream contributions, not ordinary development in this fork.
 See [DRYAS maintenance](docs/project/dryas-maintenance.md) for branch and engine
 version policy.
+
+See [upstream contribution and license policy](UPSTREAM.md)
+([简体中文](UPSTREAM.zh-Hans.md)) and the [downstream change record](CHANGES.md).
 
 ## Development Setup
 

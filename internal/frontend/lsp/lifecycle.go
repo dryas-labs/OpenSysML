@@ -1,3 +1,4 @@
+// Modified by DRYAS maintainers: expire completion handles when document state changes.
 package lsp
 
 import (
@@ -16,6 +17,9 @@ func (s *Server) Initialize(ctx context.Context, params *protocol.InitializePara
 		s.applyLintSettings(ctx, params.InitializationOptions)
 		s.setHoverMarkdown(clientRendersMarkdownHover(params.Capabilities))
 		s.setCompletionMarkdown(clientRendersMarkdownCompletion(params.Capabilities))
+		s.mu.Lock()
+		s.completionResolve = clientResolvesCompletionDocumentation(params.Capabilities)
+		s.mu.Unlock()
 		s.setCrossDocument(clientAdvertisesCrossDocument(params.Capabilities))
 	}
 	return &protocol.InitializeResult{
@@ -34,6 +38,7 @@ func (s *Server) Initialize(ctx context.Context, params *protocol.InitializePara
 			WorkspaceSymbolProvider: true,
 			CompletionProvider: &protocol.CompletionOptions{
 				TriggerCharacters: []string{":", "."},
+				ResolveProvider:   true,
 			},
 			DocumentFormattingProvider:      true,
 			DocumentRangeFormattingProvider: true,

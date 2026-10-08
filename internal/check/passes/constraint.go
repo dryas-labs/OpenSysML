@@ -1,3 +1,4 @@
+// Modified by DRYAS maintainers: check base reachability before rejecting specialization cycles.
 package passes
 
 import (

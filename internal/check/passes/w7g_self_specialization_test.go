@@ -1,3 +1,4 @@
+// Modified by DRYAS maintainers: cover self-specialization with a path to Base::Anything.
 package passes
 
 import "testing"

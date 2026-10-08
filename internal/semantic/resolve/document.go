@@ -1,3 +1,4 @@
+// Modified by DRYAS maintainers: respect hidden imported memberships during document lookup.
 package resolve
 
 import (

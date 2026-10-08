@@ -1,3 +1,4 @@
+// Modified by DRYAS maintainers: retain kind-implied part types and mutually specializing feature types.
 // Package semantics provides the derived semantic model that validation
 // depth-C constraint checks rely on: a specialization/typing graph (with cycle
 // detection), and — in later increments — inherited-member resolution,

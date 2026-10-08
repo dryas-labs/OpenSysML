@@ -2,7 +2,9 @@
 
 This branch starts at upstream v0.9.2 and carries separately committed semantic
 fixes plus experimental read-only exports. It does not replace upstream develop.
-The upstream module path, licenses and notices are retained.
+The upstream module path, licenses and notices are retained. See
+[license and distribution requirements](../../UPSTREAM.md#license-and-attribution-maintenance)
+and the [downstream change record](../../CHANGES.md).
 
 ## Branches
 
@@ -14,7 +16,7 @@ The upstream module path, licenses and notices are retained.
   and integrated into `main` deliberately.
 - `codex/fix-import-clashes` remains dedicated to upstream PR #981.
 
-Changing the default branch does not upgrade the installed Tracemgr engine or
+Changing the default branch does not upgrade the installed Systrace engine or
 publish a binary release. Product engine versions remain selected separately.
 
 The stdio-only methods DryasDescribeInherited, DryasFindBySpecialization and
@@ -35,7 +37,8 @@ tests before this protocol can be advertised as a general-purpose public service
 DRYAS adapters, evaluation cases, engineering rules and UI stay in the DRYAS repository.
 `dryas-labs/OpenSysML` is maintained as the product engine in its own right.
 The existing upstream submission is [Open-MBEE PR #981](https://github.com/Open-MBEE/OpenSysML/pull/981).
-Other fixes remain in this fork; new upstream PRs are outside the current scope.
+Suitable fixes and general improvements will continue to be proposed upstream.
+Acceptance and release timing remain upstream decisions; see [contribution status](../../UPSTREAM.md).
 Upstream work is integrated selectively and tested with the downstream changes.
 A successful development benchmark does not establish full standard conformance
 or release qualification.
@@ -45,9 +48,9 @@ or release qualification.
 Use the Go version required by go.mod. For a reproducible development binary:
 
 ```sh
-go build -trimpath -ldflags="-X main.Version=v0.9.2-dryas.3" -o bin/sysml ./cmd/sysml
-go build -trimpath -ldflags="-X main.Version=v0.9.2-dryas.3" -o bin/sysml-grpc ./cmd/sysml-grpc
-go build -trimpath -ldflags="-X main.Version=v0.9.2-dryas.3" -o bin/sysml-lsp ./cmd/sysml-lsp
+go build -trimpath -ldflags="-X main.Version=v0.9.2-dryas.4" -o bin/sysml ./cmd/sysml
+go build -trimpath -ldflags="-X main.Version=v0.9.2-dryas.4" -o bin/sysml-grpc ./cmd/sysml-grpc
+go build -trimpath -ldflags="-X main.Version=v0.9.2-dryas.4" -o bin/sysml-lsp ./cmd/sysml-lsp
 ```
 
 This is a development version label, not an upstream release or a published tag.
@@ -76,7 +79,37 @@ integrated implementation produce identical diagnostic messages over the pinned
 2026-08 pilot corpora. The fork-specific expectation record now reflects those
 already reviewed downstream fixes; see [the corpus note](imported-name-clashes.md).
 
-This source prepares the next development engine, `v0.9.2-dryas.3`. Existing
-Tracemgr 0.1.2 packages remain tied to `v0.9.2-dryas.2` until a separate product
-engine update is tested and packaged. Updating this branch does not silently
-replace an installed engine or alter historical benchmark results.
+This source includes the development engine changes used by Systrace with
+`v0.9.2-dryas.4`. Systrace selects and tests an exact source revision independently.
+Updating this branch does not replace an installed engine.
+
+## Documentation editing
+
+The language server uses native lexer token spans to suppress code completion
+inside regular comments, documentation and notes. An unfinished block remains
+documentation at EOF; completion resumes after a closing delimiter or line-note
+terminator. Delimiters inside strings and unrestricted names do not open comments.
+
+Ordinary hover combines existing leading notes with the complete documentation
+directly owned by the native declaration. Named, anonymous and multiple doc
+members are included; documentation belonging to nested or sibling declarations
+is not collected. Library records are matched to their parsed source declaration
+by their native source span. Definition locations and editor Ctrl-hover previews
+are unchanged.
+
+## Selected completion details
+
+Clients advertising documentation resolve support receive a compact list and a
+session-local handle. `completionItem/resolve` reads the selected declaration's
+native source and supplies its signature, visible spelling, actual declaration
+name, source filename, and complete leading/owned documentation. Aliases and short
+names retain their offered insertion spelling. Standard-library documentation is
+loaded on demand; a closed workspace record is parsed as an immutable snapshot,
+without replacing its indexed symbols. Hover uses the same documentation helper.
+
+Handles are retained for eight lists, contain no host paths, and expire on restart
+or model-context changes. Continued typing of the same identifier is permitted;
+an edited declaration, import, other document, or an expired list requires fresh
+completion. Resolve changes only `documentation`; it never adds imports, changes
+insertion text or infers missing physical semantics. Clients without documentation
+resolve retain eager documentation for already parsed workspace declarations.

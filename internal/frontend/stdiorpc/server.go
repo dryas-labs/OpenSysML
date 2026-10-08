@@ -1,3 +1,4 @@
+// Modified by DRYAS maintainers: register downstream native model-query methods.
 // Copyright 2025 Open‐MBEE Foundation. All rights reserved.
 // Use of this source code is governed by the LICENSE file.
 

@@ -1,3 +1,4 @@
+// Modified by DRYAS maintainers: handle clashing imported memberships in native lookup.
 package resolve
 
 import (
