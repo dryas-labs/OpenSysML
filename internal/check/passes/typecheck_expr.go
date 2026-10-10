@@ -1,3 +1,4 @@
+// Modified by DRYAS maintainers: isolate expression findings from unresolved inputs.
 package passes
 
 import (
@@ -19,6 +20,7 @@ import (
 // diagnostic is only produced when both the expected and the actual type are
 // known, so partial type information never yields a false positive.
 type exprChecker struct {
+	blocked  func(source.Span) bool
 	resolver *resolve.Resolver
 	model    *semantics.Model
 	// lang is the document's language: KerML gives `[` no function to invoke.
@@ -55,6 +57,9 @@ func (ec *exprChecker) errorf(span source.Span, format string, args ...any) {
 
 // errorCode is errorf under the code of a rule with its own.
 func (ec *exprChecker) errorCode(code string, span source.Span, format string, args ...any) {
+	if ec.blocked != nil && ec.blocked(span) {
+		return
+	}
 	ec.diags = append(ec.diags, diag.Diagnostic{
 		Severity: diag.SeverityError,
 		Span:     span,
@@ -929,6 +934,12 @@ func (ec *exprChecker) inferInvocation(scope *symbols.Scope, e *ast.InvocationEx
 // inferNodeInvocation is inferInvocation for an invocation performed by node (nil for a bare
 // call).
 func (ec *exprChecker) inferNodeInvocation(scope *symbols.Scope, e *ast.InvocationExpr, node *symbols.Symbol) semantics.PrimType {
+	// A node's body can redefine its input parameters. If that declaration
+	// contains unresolved references, its derived call signature is incomplete.
+	// Other declarations in the document are still checked independently.
+	if node != nil && node.Decl != nil && ec.blocked != nil && ec.blocked(node.Decl.Span()) {
+		return semantics.PrimUnknown
+	}
 	args := semantics.InvocationArgs(e)
 	// Typed once, for selecting the overload, so nested errors report once.
 	argTypes := ec.argumentTypes(scope, e)

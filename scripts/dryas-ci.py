@@ -13,12 +13,17 @@ import sys
 ROOT = Path(__file__).resolve().parent.parent
 # Each pattern includes an entire behavior group, including its subtests.
 TARGETS = {
-    "./internal/check/passes": "Test(PassesGolden|ImportedNameClash|ResolvedTypingSurvives|CyclesNeedAnActualBasePath|PartUsagePartDefinition|ConstraintDirectSpecializationCycle|ConstraintTransitiveSpecializationCycle|ConstraintNestedMemberSpecializationCycle)",
+    "./internal/check/passes": "Test(PassesGolden|ImportedNameClash|Resolved(Typing|Expression)Survives|CyclesNeedAnActualBasePath|PartUsagePartDefinition|ConstraintDirectSpecializationCycle|ConstraintTransitiveSpecializationCycle|ConstraintNestedMemberSpecializationCycle)",
     "./internal/frontend/lsp": "Test(CompletionVisibleImportedNames|CompletionRefreshesAfterImportEdits|CompletionThenTypingKeepsCrossFileNavigation|CompletionSuppressesCommentBodies|CompletionResumesOutsideCommentBodies|CompletionResolve|HoverIncludesOwnedDocumentation|HoverOwnedDocumentationPreservesFullTextAndOwnership|HoverReferencedOwnedDocumentationAcrossFiles|HoverIncludesCompleteBundledVoltageDocumentation)",
     "./internal/frontend/grpc": "TestDryas(DerivedNativeQueries|ImplicitNativeProvenance)",
     "./internal/frontend/stdiorpc": "TestServe",
     "./internal/semantic/resolve": "Test(RootImportClashPreservesGlobalDeclaration|HiddenReexportPreservesIndependentImport|GlobalRootImportClash)",
-    "./internal/semantic/semantics": "TestMutualSpecializationDoesNotEraseFeatureTypes",
+    "./internal/semantic/semantics": "Test(MutualSpecializationDoesNotEraseFeatureTypes|CrossReferenceRetainsUntypedPartBase)",
+    "./internal/workspace/libs": "Test(EmbeddedSnapshotIsCurrent|SnapshotIndexMatchesFreshLoad)$",
+    "./internal/workspace/model": "Test(ConnectorEndNamesResolve|ExprTypeCheckNoStdlibFalsePositives|ExprTypeCheckPublishedStdlibDefects|StdlibMagneticDipoleMomentNameClash)$",
+    "./internal/exec/runtime": "Test(MeasurementRefValues|MeasurementRefReport|QuantityCalculations|QuantityCalculationsReport|AdoptRebindsAnExtentWhenItsTypeNameIsShadowed)$",
+    "./internal/frontend/repl": "TestPromptDoesNotSeeALoadedFilesRootImports$",
+    "./tests/model": "Test(FilteredImport.*|IncrementalEqualsFresh)$",
 }
 
 

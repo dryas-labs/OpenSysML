@@ -37,3 +37,20 @@ func TestResolvedTypingSurvivesOtherResolutionErrors(t *testing.T) {
 		}
 	}
 }
+
+// An unrelated unresolved name must not silence expression typing either.
+func TestResolvedExpressionSurvivesOtherResolutionErrors(t *testing.T) {
+	src := `package P { private import ScalarValues::*;
+   part missing : Missing; attribute broken : Integer = "not an integer"; }`
+	root, parsed, idx := analyzeInputs(t, "t.sysml", src)
+	diags := Analyze("t.sysml", root, parsed, idx)
+	found := false
+	for _, d := range diags {
+		if d.Code == "type.expr" {
+			found = true
+		}
+	}
+	if !found {
+		t.Fatalf("independent expression diagnostic missing: %v", diags)
+	}
+}

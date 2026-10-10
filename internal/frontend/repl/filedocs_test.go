@@ -1,3 +1,4 @@
+// Modified by DRYAS maintainers: isolate root-import visibility from invalid package typing and quote the test path.
 package repl
 
 import (
@@ -7,6 +8,7 @@ import (
 	"path/filepath"
 	"slices"
 	"sort"
+	"strconv"
 	"strings"
 	"testing"
 
@@ -102,11 +104,11 @@ func basenames(paths []string) []string {
 // root packages are reachable through the global namespace as before.
 func TestPromptDoesNotSeeALoadedFilesRootImports(t *testing.T) {
 	s := NewSession()
-	path := tempFile(t, "a.sysml", "import ScalarValues::*;\npackage A { attribute x : Real; }\n")
-	if _, _, err := s.runMeta("%load " + path); err != nil {
+	path := tempFile(t, "a.sysml", "private import ScalarValues::*;\npackage A { part def Marker; attribute x : Real; }\n")
+	if _, _, err := s.runMeta("%load " + strconv.Quote(path)); err != nil {
 		t.Fatal(err)
 	}
-	res := s.Submit("package P { attribute y : Real; part a : A; }")
+	res := s.Submit("package P { attribute y : Real; part a : A::Marker; }")
 	var messages []string
 	for _, d := range res.Diagnostics {
 		if res.mine(d.Span) {

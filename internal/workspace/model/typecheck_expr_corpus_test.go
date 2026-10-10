@@ -1,3 +1,4 @@
+// Modified by DRYAS maintainers: disambiguate the magnetic-unit reference only in dimensional test controls; assert the original name clash separately.
 package model
 
 import (
@@ -92,6 +93,12 @@ func checkStdlibExprTypeFindings(t *testing.T, src libs.Source, want []string) {
 		if err != nil {
 			t.Fatalf("read %s: %v", name, err)
 		}
+		// ISQ re-exports two distinct MagneticDipoleMomentUnit declarations.
+		// Keep the dimensional assertion against its explicitly named target;
+		// the unmodified text is checked separately for its name-resolution error.
+		if name == "Domain Libraries/Quantities and Units/SI.sysml" {
+			data = []byte(strings.ReplaceAll(string(data), ": MagneticDipoleMomentUnit", ": ISQElectromagnetism::MagneticDipoleMomentUnit"))
+		}
 		ws.Open(name, data, 1)
 		found = append(found, exprTypeDiagnosticLines(ws, name, data)...)
 		ws.Close(name)
@@ -179,5 +186,24 @@ func TestExprTypeCheckNoExampleFalsePositives(t *testing.T) {
 	if len(found) != 0 {
 		t.Fatalf("expression type checker reported %d finding(s) in example models:\n%s",
 			len(found), strings.Join(found, "\n"))
+	}
+}
+
+func TestStdlibMagneticDipoleMomentNameClash(t *testing.T) {
+	const name = "Domain Libraries/Quantities and Units/SI.sysml"
+	data, err := libs.EmbeddedSource().Read(name)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ws := NewWorkspace()
+	ws.Open(name, data, 1)
+	count := 0
+	for _, d := range ws.Diagnostics(name) {
+		if d.Source == "name-resolution" && d.Code == "unresolved" && strings.Contains(d.Message, "MagneticDipoleMomentUnit") {
+			count++
+		}
+	}
+	if count != 2 {
+		t.Fatalf("unmodified SI must report its two clashing imported unit references; got %d", count)
 	}
 }
