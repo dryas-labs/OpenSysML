@@ -1,3 +1,4 @@
+// Modified by DRYAS maintainers: explicitly select the SI unit when wildcard imports also expose a same-named function.
 package runtime
 
 import (
@@ -145,6 +146,7 @@ func quantityCalculationsContext(t *testing.T) (*Context, *symbols.Scope) {
 			public import SI::*;
 			public import QuantityCalculations::*;
 			public import TrigFunctions::*;
+			private alias rad for SI::radian;
 			attribute side : LengthValue = 3 [m];
 			attribute area : AreaValue = side * side;
 			attribute none : LengthValue[0..*] = ();

@@ -1,3 +1,4 @@
+// Modified by DRYAS maintainers: test lexical shadowing without ambiguous sibling wildcard imports.
 package runtime
 
 import (
@@ -2064,9 +2065,9 @@ func TestAdoptRebindsAnExtentWhenAHierarchyChanges(t *testing.T) {
 func TestAdoptRebindsAnExtentWhenItsTypeNameIsShadowed(t *testing.T) {
 	const model = `package Demo {
 	package A { part def Car; }
+	private import A::*;
 	package P {
-		import B::*;
-		import A::*;
+		private import B::*;
 		ref part car : A::Car = new A::Car();
 		calc pick { return : A::Car[*] = all Car; }
 		ref part cars : A::Car[*] = pick();

@@ -1,12 +1,21 @@
 # Pilot Differential Diagnostics
 
+<!-- Modified by DRYAS maintainers: distinguish retained upstream history from the current downstream run. -->
+
+The figures and adjudications below describe the retained **upstream historical run** in
+[pilot-differential-baseline.json](pilot-differential-baseline.json). They have not been
+replaced by downstream scores. The maintained fork records its current comparison in
+[dryas-pilot-differential-baseline.json](dryas-pilot-differential-baseline.json), with the
+scope and changes explained in [Downstream CI regressions](dryas-ci-regressions.md).
+`pilot-diff -update` and its provenance guard now target that downstream record.
+
 ## Overview
 
 **Reference:** [SysML v2 Pilot Implementation](https://github.com/Systems-Modeling/SysML-v2-Pilot-Implementation), release `2026-08` (`jupyter-sysml-kernel` 0.62.0) — the same release the training corpus is pinned to
 **Bridges:** two pinned plain-Java programs over the pilot's own validators — `scripts/pilot-sysml-validator/ValidateSysML.java` and `scripts/pilot-kerml-validator/ValidateKerML.java` — built against the shaded jar the [DeciSym/sysmlv2-validator](https://github.com/DeciSym/sysmlv2-validator) build (commit `63abbd9fbc7851dc437d01b2dc07836b919770b8`) provisions
 **Provision:** `./scripts/download-pilot-sysml-validator.sh` and `./scripts/download-pilot-kerml-validator.sh` (each needs Java 21+, and calls `download-pilot-validator.sh` for the pinned jar when it is absent; they write `build/pilot-sysml-validator/` and `build/pilot-kerml-validator/`)
 **Run:** `go run -C tools ./cmd/pilot-diff` (writes `build/pilot-diff/pilot-diff.txt` and `build/pilot-diff/pilot-diff.json`, plus two CI-consumable renderings of the same run: `pilot-diff.xml`, JUnit XML with one suite per corpus root and one case per file that drew a diagnostic, and `pilot-diff.sarif`, SARIF 2.1.0 with one result per disagreeing diagnostic group located on the compared model file)
-**Baseline:** the last committed run is [pilot-differential-baseline.json](pilot-differential-baseline.json), so a later run can be diffed against it
+**Historical baseline:** [pilot-differential-baseline.json](pilot-differential-baseline.json) preserves the upstream run described on this page
 **Status:** advisory only — nothing here gates CI, and the harness reads the corpora without writing to them
 
 **Labels:** this is an engineering record, and the short labels in it are internal cross-references, not

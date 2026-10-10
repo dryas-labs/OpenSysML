@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Modified by DRYAS maintainers: verify corpus bytes survive caller checkout settings.
 # Checks pilot_fetch_subtrees in scripts/pilot-pin.sh against a throwaway release
 # repository, so the pin, the stamp and the empty-subtree refusal are the only
 # things under test and no network is needed.
@@ -76,6 +77,18 @@ pin="test-tag $commit file://$release"
 name="a populated subtree is installed and stamped"
 fetch "$commit" "sysml.library.xmi:$target"
 if [[ $status -eq 0 ]] && [[ $(count_xmi "$target") -eq 2 ]] && [[ $(cat "$target/.pilot-pin") == "$pin" ]]; then
+	pass "$name"
+else
+	fail "$name"
+fi
+
+name="caller CRLF checkout settings cannot change the pinned corpus bytes"
+git config --file "$work/checkout-config" core.autocrlf true
+git config --file "$work/checkout-config" core.eol crlf
+raw_target="$work/dest/raw-bytes"
+GIT_CONFIG_GLOBAL="$work/checkout-config" fetch "$commit" "sysml.library.xmi:$raw_target"
+git -C "$release" show HEAD:sysml.library.xmi/Domain/Quantities.sysmlx >"$work/original-xmi"
+if [[ $status -eq 0 ]] && cmp -s "$work/original-xmi" "$raw_target/Domain/Quantities.sysmlx"; then
 	pass "$name"
 else
 	fail "$name"

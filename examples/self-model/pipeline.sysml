@@ -1,3 +1,4 @@
+// Modified by DRYAS maintainers: reflect the element-scoped TypeCheckPass implementation.
 // The analysis pipeline of OpenSysML itself: what each stage consumes and
 // produces, and the channels the artifacts travel over.
 package OpenSysMLArtifacts {
@@ -202,7 +203,10 @@ package OpenSysMLPipeline {
         }
         // A lint: a signal trigger's name no declaration and no send accounts for.
         part undeclaredSignals : NameResolutionCheck { attribute :>> goType = "UndeclaredSignalPass"; }
-        part typeCheck : TypeCheck { attribute :>> goType = "TypeCheckPass"; }
+        part typeCheck : TypeCheck {
+            attribute :>> goType = "TypeCheckPass";
+            attribute :>> elementScoped = true;
+        }
         part transitionGuards : TypeCheck {
             attribute :>> goType = "TransitionGuardPass";
             attribute :>> elementScoped = true;
