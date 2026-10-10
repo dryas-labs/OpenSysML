@@ -20,6 +20,7 @@ Historical M0 thresholds, category maps, adjudications and scores are unchanged.
 | REPL fixture types a part by a package | Reference an actual part definition inside that package. Preserve the root-import isolation assertion and quote the file path for portability. |
 | SI dimension assertion depends on an ambiguous unit name | Assert the original two unresolved MagneticDipoleMomentUnit references separately. In dimensional controls only, qualify the same ISQElectromagnetism type the existing assertions describe. Keep all dimensional assertions and leave vendored library text unchanged. |
 | Part-definition census probe expects an error from a valid part | Retain the model as a clean control. SysML §8.3.11.3 and KerML §8.3.3.3.4 supply Parts::Part implicitly; classify it separately as satisfied by construction rather than count it as observed rejection coverage. |
+| Reference corpus differs only after checkout | Disable automatic line-ending conversion in temporary reference clones, including their later sparse checkout. Reproduce with a caller configured for CRLF and compare fetched bytes to Git objects; regenerate the downstream record from the original pinned bytes. Diagnostic results stay identical. |
 
 The native maintenance CI includes these regression groups. Broader upstream checks
 remain required for assessing the whole change; passing selected groups does not

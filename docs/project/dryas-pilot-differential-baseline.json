@@ -26,7 +26,7 @@
         "dir": "examples/sysml-v2-training",
         "origin": "pinned",
         "files": 100,
-        "digest": "sha256:bb5c3f833da9cf4ca4c6e9d5a1ecf1caa5627b185a28d2604429b98fc3fb5bdb"
+        "digest": "sha256:07e537e50ff0802af87d53d91aa6bf8e849d5e8661514ba4a63127eb719cf5e7"
       },
       {
         "name": "pilot-examples",
