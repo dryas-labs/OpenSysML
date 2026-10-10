@@ -1,3 +1,4 @@
+// Modified by DRYAS maintainers: preserve the upstream baseline while recording current downstream evidence.
 package diff
 
 import (
@@ -8,10 +9,11 @@ import (
 	"github.com/Open-MBEE/OpenSysML/tools/oracle/errata"
 )
 
-// committedBaseline is the record docs/project/pilot-differential.md is
-// generated from, and refreshCommand is the only supported way to re-record it.
+// committedBaseline is the current downstream run. The upstream historical
+// record remains in pilot-differential-baseline.json with its published counts.
+// refreshCommand is the only supported way to re-record the downstream run.
 const (
-	committedBaseline = "docs/project/pilot-differential-baseline.json"
+	committedBaseline = "docs/project/dryas-pilot-differential-baseline.json"
 	refreshCommand    = "go run -C tools ./cmd/pilot-diff -update"
 )
 

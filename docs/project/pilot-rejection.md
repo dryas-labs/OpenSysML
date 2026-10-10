@@ -1,3 +1,10 @@
+<!-- Modified by DRYAS maintainers: annotate retained historical part-typing observations. -->
+
+> Historical observation: the part-typing entries below describe the recorded upstream
+> run. The maintained fork accepts `item def I; part p : I;` because its implicit
+> `Parts::Part` satisfies the constraint. The original model remains a required clean
+> census control; see [the current census](validation-constraints.md).
+
 # Pilot Rejection Oracle
 
 Every other oracle in this project is one-directional. The

@@ -147,6 +147,16 @@ func TestExprTypeCheckStdlibFindingsNeedTheLibrary(t *testing.T) {
 // TestExprTypeCheckNoExampleFalsePositives runs the same guard over the
 // well-formed models the repository ships as examples and runtime fixtures.
 func TestExprTypeCheckNoExampleFalsePositives(t *testing.T) {
+	// These conformance fixtures explicitly expect runtime index errors in their
+	// paired .expected.json files. Require the corresponding static errors too,
+	// rather than treating negative inputs as diagnostic-free positive examples.
+	negativeRoot := filepath.Join("..", "..", "exec", "runtime", "testdata", "conformance")
+	expectedNegatives := map[string]string{
+		filepath.Join(negativeRoot, "calc_sequence_index_non_integer.sysml"): "sequence index must be an Integer, found Rational",
+		filepath.Join(negativeRoot, "calc_sequence_index_zero.sysml"):        "sequence index counts from 1, found 0",
+	}
+	checkedNegatives := make(map[string]bool)
+
 	roots := []string{
 		filepath.Join("..", "..", "..", "examples"),
 		filepath.Join("..", "..", "exec", "runtime", "testdata"),
@@ -175,12 +185,25 @@ func TestExprTypeCheckNoExampleFalsePositives(t *testing.T) {
 				return readErr
 			}
 			ws.Open(path, data, 1)
-			found = append(found, exprTypeDiagnostics(ws, path)...)
+			findings := exprTypeDiagnostics(ws, path)
+			if want, negative := expectedNegatives[path]; negative {
+				checkedNegatives[path] = true
+				if len(findings) != 1 || findings[0] != path+": "+want {
+					t.Errorf("negative fixture %s: got %v, want exactly %q", path, findings, want)
+				}
+			} else {
+				found = append(found, findings...)
+			}
 			ws.Close(path)
 			return nil
 		})
 		if err != nil {
 			t.Fatalf("walk %s: %v", root, err)
+		}
+	}
+	for path := range expectedNegatives {
+		if !checkedNegatives[path] {
+			t.Errorf("negative fixture was not checked: %s", path)
 		}
 	}
 	if len(found) != 0 {

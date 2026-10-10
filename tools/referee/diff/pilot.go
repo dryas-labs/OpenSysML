@@ -1,3 +1,4 @@
+// Modified by DRYAS maintainers: attribute native bridge paths consistently across hosts.
 package diff
 
 import (
@@ -89,37 +90,11 @@ func runPilot(validator string, args []string, byPath map[string]string, out map
 		return fmt.Errorf("start %s: %w", validator, err)
 	}
 
-	var unattributed []string
-	scanner := bufio.NewScanner(stderr)
-	scanner.Buffer(make([]byte, 0, 64*1024), 4*1024*1024)
-	for scanner.Scan() {
-		line := scanner.Text()
-		match := pilotLine.FindStringSubmatch(line)
-		if match == nil {
-			if strings.TrimSpace(line) != "" && !strings.HasPrefix(line, "log4j:") {
-				unattributed = append(unattributed, line)
-			}
-			continue
-		}
-		rel, ok := byPath[match[1]]
-		if !ok {
-			unattributed = append(unattributed, line)
-			continue
-		}
-		lineNo, err := strconv.Atoi(match[2])
-		if err != nil {
-			return fmt.Errorf("pilot reported a non-numeric line in %q", line)
-		}
-		out[rel] = append(out[rel], diagnostic{
-			File:     rel,
-			Line:     lineNo,
-			Severity: match[4],
-			Category: categorize(match[5]),
-			Message:  match[5],
-		})
-	}
-	if err := scanner.Err(); err != nil {
-		return fmt.Errorf("read the validator's output: %w", err)
+	unattributed, readErr := readPilotDiagnostics(stderr, byPath, out, categorize)
+	if readErr != nil {
+		_ = cmd.Process.Kill()
+		_ = cmd.Wait()
+		return readErr
 	}
 
 	// Exit 1 only means the batch had errors; anything else is the validator
@@ -137,4 +112,43 @@ func runPilot(validator string, args []string, byPath map[string]string, out map
 		fmt.Fprintf(log, "pilot output not attributable to a corpus file: %s\n", line)
 	}
 	return nil
+}
+
+// readPilotDiagnostics attributes the bridges' native paths to the corpus's
+// portable slash-separated keys before any category or score is computed.
+func readPilotDiagnostics(stderr io.Reader, byPath map[string]string, out map[string][]diagnostic, categorize func(string) Category) ([]string, error) {
+	var unattributed []string
+	scanner := bufio.NewScanner(stderr)
+	scanner.Buffer(make([]byte, 0, 64*1024), 4*1024*1024)
+	for scanner.Scan() {
+		line := scanner.Text()
+		match := pilotLine.FindStringSubmatch(line)
+		if match == nil {
+			if strings.TrimSpace(line) != "" && !strings.HasPrefix(line, "log4j:") {
+				unattributed = append(unattributed, line)
+			}
+			continue
+		}
+		rel, ok := byPath[filepath.ToSlash(match[1])]
+		if !ok {
+			unattributed = append(unattributed, line)
+			continue
+		}
+		lineNo, err := strconv.Atoi(match[2])
+		if err != nil {
+			return nil, fmt.Errorf("pilot reported a non-numeric line in %q", line)
+		}
+		out[rel] = append(out[rel], diagnostic{
+			File:     rel,
+			Line:     lineNo,
+			Severity: match[4],
+			Category: categorize(match[5]),
+			Message:  match[5],
+		})
+	}
+	if err := scanner.Err(); err != nil {
+		return nil, fmt.Errorf("read the validator's output: %w", err)
+	}
+
+	return unattributed, nil
 }

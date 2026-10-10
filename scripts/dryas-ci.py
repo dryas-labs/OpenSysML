@@ -20,8 +20,8 @@ TARGETS = {
     "./internal/semantic/resolve": "Test(RootImportClashPreservesGlobalDeclaration|HiddenReexportPreservesIndependentImport|GlobalRootImportClash)",
     "./internal/semantic/semantics": "Test(MutualSpecializationDoesNotEraseFeatureTypes|CrossReferenceRetainsUntypedPartBase)",
     "./internal/workspace/libs": "Test(EmbeddedSnapshotIsCurrent|SnapshotIndexMatchesFreshLoad)$",
-    "./internal/workspace/model": "Test(ConnectorEndNamesResolve|ExprTypeCheckNoStdlibFalsePositives|ExprTypeCheckPublishedStdlibDefects|StdlibMagneticDipoleMomentNameClash)$",
-    "./internal/exec/runtime": "Test(MeasurementRefValues|MeasurementRefReport|QuantityCalculations|QuantityCalculationsReport|AdoptRebindsAnExtentWhenItsTypeNameIsShadowed)$",
+    "./internal/workspace/model": "Test(ConnectorEndNamesResolve|ExprTypeCheckNoStdlibFalsePositives|ExprTypeCheckPublishedStdlibDefects|ExprTypeCheckNoExampleFalsePositives|StdlibMagneticDipoleMomentNameClash)$",
+    "./internal/exec/runtime": "Test(MeasurementRefValues|MeasurementRefReport|QuantityCalculations|QuantityCalculationsReport|PointArithmetic|AdoptRebindsAnExtentWhenItsTypeNameIsShadowed)$",
     "./internal/frontend/repl": "TestPromptDoesNotSeeALoadedFilesRootImports$",
     "./tests/model": "Test(FilteredImport.*|IncrementalEqualsFresh)$",
 }

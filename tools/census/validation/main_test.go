@@ -1,3 +1,4 @@
+// Modified by DRYAS maintainers: distinguish construction-satisfied constraints from reported violations.
 package validation
 
 import (
@@ -266,15 +267,16 @@ func TestRewriteDerivedLinesRestatesTheSummary(t *testing.T) {
 		Constraint{Name: "validateB", Status: StatusApproximate},
 		Constraint{Name: "validateC", Status: StatusNotImplemented},
 		Constraint{Name: "validateD", Status: StatusUnknown},
+		Constraint{Name: "validateE", Status: StatusSatisfied},
 	)
 	stale := "**Pilot:** [Pilot](https://example.test) release `2025-01`, commit `old`, artifact `jupyter-sysml-kernel 0.50.0` — the pin\n" +
 		"**Jar:** `kernel-0.50.0-all.jar` (`sha256:old`), provisioned by a script\n"
-	content := "# Census\n\n" + stale + "\n**Census:** 0 of 0 named constraints are reported by OpenSysML — 0 ✅ faithful and 0 ⚠️ approximate; 0 ❌ not implemented, 0 ⛔ deliberate, 0 🚧 known failure, 0 ❔ unknown.\n\ntrailing\n"
+	content := "# Census\n\n" + stale + "\n**Census:** 0 of 0 named constraints are reported by OpenSysML — 0 ✅ faithful and 0 ⚠️ approximate; 0 ❌ not implemented, 0 ⛔ deliberate, 0 🚧 known failure, 0 ❔ unknown, 0 ◉ satisfied by construction.\n\ntrailing\n"
 	got, err := rewriteDerivedLines(content, base)
 	if err != nil {
 		t.Fatal(err)
 	}
-	want := "# Census\n\n" + testProvenance + "\n**Census:** 2 of 4 named constraints are reported by OpenSysML — 1 ✅ faithful and 1 ⚠️ approximate; 1 ❌ not implemented, 0 ⛔ deliberate, 0 🚧 known failure, 1 ❔ unknown.\n\ntrailing\n"
+	want := "# Census\n\n" + testProvenance + "\n**Census:** 2 of 5 named constraints are reported by OpenSysML — 1 ✅ faithful and 1 ⚠️ approximate; 1 ❌ not implemented, 0 ⛔ deliberate, 0 🚧 known failure, 1 ❔ unknown, 1 ◉ satisfied by construction.\n\ntrailing\n"
 	if got != want {
 		t.Fatalf("rewrite:\n%s\nwant:\n%s", got, want)
 	}
@@ -341,7 +343,7 @@ func TestCheckDocumentRejectsDrift(t *testing.T) {
 		Constraint{Name: "validateD", Source: "kerml", Status: StatusApproximate},
 	)
 	doc := testProvenance + strings.Join([]string{
-		"**Census:** 2 of 4 named constraints are reported by OpenSysML — 1 ✅ faithful and 1 ⚠️ approximate; 1 ❌ not implemented, 0 ⛔ deliberate, 0 🚧 known failure, 1 ❔ unknown.",
+		"**Census:** 2 of 4 named constraints are reported by OpenSysML — 1 ✅ faithful and 1 ⚠️ approximate; 1 ❌ not implemented, 0 ⛔ deliberate, 0 🚧 known failure, 1 ❔ unknown, 0 ◉ satisfied by construction.",
 		"",
 		"| Constraint | Language | Checks | Implementation | Our message | Negative case | Status |",
 		"|---|---|---|---|---|---|---|",
@@ -645,5 +647,40 @@ func TestBaselineMatchesNamesEverySide(t *testing.T) {
 		if !strings.Contains(err.Error(), want) {
 			t.Errorf("error %q lacks %q", err, want)
 		}
+	}
+}
+
+// Construction controls cannot inflate the count of reported violations, use
+// diagnostic expectations, or disappear from the census unnoticed.
+func TestConstructionSatisfiedProbeContract(t *testing.T) {
+	root := t.TempDir()
+	dir := filepath.Join(root, filepath.FromSlash(probesDir))
+	if err := os.MkdirAll(dir, 0o755); err != nil {
+		t.Fatal(err)
+	}
+	base := &Baseline{Constraints: []Constraint{{Name: "validateA", Source: "sysml", Status: StatusSatisfied}}}
+	if got := base.counts().Implemented(); got != 0 {
+		t.Fatalf("reported violations = %d, want 0", got)
+	}
+	if err := checkProbes(root, base); err == nil {
+		t.Fatal("missing construction control was accepted")
+	}
+	write := func(expect string) {
+		t.Helper()
+		if err := os.WriteFile(filepath.Join(dir, "validateA.sysml"), []byte("// Census: validateA\n// Expect: "+expect+"\npackage P;\n"), 0o644); err != nil {
+			t.Fatal(err)
+		}
+	}
+	write("error: x")
+	if err := checkProbes(root, base); err == nil {
+		t.Fatal("construction status accepted an error expectation")
+	}
+	write("clean")
+	if err := checkProbes(root, base); err != nil {
+		t.Fatal(err)
+	}
+	base.Constraints[0].Status = StatusFaithful
+	if err := checkProbes(root, base); err == nil {
+		t.Fatal("reported-violation status accepted a clean expectation")
 	}
 }

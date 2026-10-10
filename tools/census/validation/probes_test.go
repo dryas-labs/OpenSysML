@@ -1,3 +1,4 @@
+// Modified by DRYAS maintainers: distinguish construction-satisfied constraints from reported violations.
 package validation
 
 import (
@@ -11,8 +12,8 @@ import (
 )
 
 // TestProbesReportTheirConstraint is the evidence behind every ✅/⚠️ row of the
-// census: each probe is a minimal violating model, and we must report the
-// diagnostic its header names at the severity it names.
+// census: violating models require their named diagnostic; construction
+// controls must remain completely diagnostic-free.
 func TestProbesReportTheirConstraint(t *testing.T) {
 	root, err := repo.Root()
 	if err != nil {
@@ -34,8 +35,15 @@ func TestProbesReportTheirConstraint(t *testing.T) {
 			name := filepath.Base(p.Path)
 			ws := model.NewWorkspace()
 			ws.Open(name, content, 1)
+			findings := ws.Diagnostics(name)
+			if p.Clean {
+				if len(findings) != 0 {
+					t.Fatalf("%s: construction control must be clean, got %v", p.Path, findings)
+				}
+				return
+			}
 			var seen []string
-			for _, d := range ws.Diagnostics(name) {
+			for _, d := range findings {
 				line := d.Severity.String() + ": " + d.Message
 				if d.Severity.String() == p.Severity && strings.Contains(d.Message, p.Message) {
 					return

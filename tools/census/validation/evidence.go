@@ -1,3 +1,4 @@
+// Modified by DRYAS maintainers: require source evidence for construction-satisfied constraints.
 package validation
 
 import (
@@ -279,7 +280,7 @@ func receiverType(fn *ast.FuncDecl) string {
 func checkImplementation(decls *declarations, r row, name, status string) []string {
 	var problems []string
 	refs := implementationRef.FindAllStringSubmatch(r.Cells[3], -1)
-	if implemented(status) && len(refs) == 0 && r.Cells[3] != "" && r.Cells[3] != "—" {
+	if (implemented(status) || status == StatusSatisfied) && len(refs) == 0 && r.Cells[3] != "" && r.Cells[3] != "—" {
 		problems = append(problems, fmt.Sprintf("line %d: %s implementation %q cites no internal/<file>.go:<function> location", r.Line, name, r.Cells[3]))
 	}
 	for _, m := range refs {
