@@ -1,3 +1,4 @@
+// Modified by DRYAS maintainers: explicitly select the SI unit when wildcard imports also expose a same-named function.
 // A time instant on Time::UTC is a point on a TimeScale, an IntervalScale whose
 // unit is the second. Adding a duration moves the instant along the scale and
 // answers on it, in whatever duration unit the offset was given; subtracting
@@ -18,7 +19,7 @@ package test {
 		attribute afterBurn : TimeInstantValue = launch + 3.0 [s];
 		attribute beforeBurn : TimeInstantValue = launch - 3.0 [s];
 		attribute burnFirst : TimeInstantValue = 3.0 [s] + launch;
-		attribute afterMinute : TimeInstantValue = launch + 1.0 [min];
+		attribute afterMinute : TimeInstantValue = launch + 1.0 [SI::min];
 		attribute afterHour : TimeInstantValue = launch + 1 [h];
 		attribute burnTime : DurationValue = afterBurn - launch;
 		attribute countdown : DurationValue = launch - afterBurn;

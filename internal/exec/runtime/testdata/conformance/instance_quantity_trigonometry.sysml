@@ -1,3 +1,4 @@
+// Modified by DRYAS maintainers: explicitly select the SI unit when wildcard imports also expose a same-named function.
 // Trigonometric functions over angle quantities: a degree argument is converted
 // to radians before the function applies, and a radian argument passes through.
 // The SI degree carries the library's inexact factor 1.745329E-02, so results
@@ -8,6 +9,7 @@ package test {
 	public import SI::*;
 	public import QuantityCalculations::*;
 	public import TrigFunctions::*;
+	private alias rad for SI::radian;
 
 	part def Turn {
 		attribute right : AngularMeasureValue = 90 ['°'];

@@ -1,4 +1,5 @@
 #!/usr/bin/env bash
+# Modified by DRYAS maintainers: preserve pinned corpus bytes across checkout settings.
 # Single source of the OMG SysML v2 Pilot Implementation pin, sourced by every
 # script that fetches something from it: the training corpus, the additional OMG
 # corpora, the Xpect suites, the grammars, and the reference validators the
@@ -47,7 +48,10 @@ pilot_clone() {
 	local dir="$1" head
 	shift
 	echo "Fetching $* from $PILOT_SOURCE_REPO at $PILOT_TAG ($PILOT_SOURCE_COMMIT) ..."
-	if ! git -c advice.detachedHead=false clone --quiet --filter=blob:none --sparse --depth 1 \
+	# Persist these options in the temporary clone: the later sparse checkout
+	# must also ignore the caller's platform-specific line-ending preferences.
+	if ! git -c advice.detachedHead=false clone --config core.autocrlf=false --config core.eol=lf \
+		--quiet --filter=blob:none --sparse --depth 1 \
 		--branch "$PILOT_TAG" "$PILOT_SOURCE_REPO" "$dir"; then
 		echo "error: could not clone $PILOT_SOURCE_REPO at $PILOT_TAG, the tag scripts/pilot-pin.sh pins" >&2
 		return 1

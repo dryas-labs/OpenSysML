@@ -39,32 +39,14 @@ func (TypeCheckPass) Run(ctx *Context, name string, root *ast.RootNamespace) []d
 		expr:     &exprChecker{resolver: ctx.Resolver(), model: model, lang: ctx.Kind},
 		lang:     ctx.Kind,
 	}
-	if ctx.DownstreamOfFailure(root) {
-		// A downstream member error must not suppress the independently resolved
-		// declaration that caused it. Keep expression/inheritance checks gated;
-		// only declared typing with a resolved target is safe in this path.
-		for _, d := range ctx.ParseDiagnostics {
-			if d.Blocking() {
-				return nil
-			}
+	// Syntax failures still prevent sound typing. Isolate name failures by
+	// expression span instead of suppressing every expression in the document.
+	for _, d := range ctx.ParseDiagnostics {
+		if d.Blocking() {
+			return nil
 		}
-		kit.WalkSymbols(ctx, rootScope, func(sym *symbols.Symbol) {
-			u, ok := sym.Decl.(*ast.Usage)
-			if !ok {
-				return
-			}
-			decl := declKind{lang: ctx.Kind, useKind: u.Kind, direction: u.Direction,
-				isReference: u.IsReference, isEnd: u.IsEnd, isIndividual: u.IsIndividual,
-				portion: u.Portion, keyword: u.Keyword, hasType: true, span: u.Span()}
-			for _, rel := range u.Relationships {
-				if rel == nil || rel.Kind != ast.RelTyping || rel.Target == nil || ctx.DownstreamOfFailure(rel.Target) {
-					continue
-				}
-				tc.checkRelationships(sym.OwnerScope, []*ast.Relationship{rel}, decl)
-			}
-		})
-		return tc.diags
 	}
+	tc.expr.blocked = ctx.DownstreamSpan
 	tc.expr.walkMembers = tc.walk
 	tc.walk(rootScope, root.Members)
 	return append(tc.diags, tc.expr.diagnostics()...)

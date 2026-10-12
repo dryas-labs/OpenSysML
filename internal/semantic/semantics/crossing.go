@@ -1,3 +1,4 @@
+// Modified by DRYAS maintainers: preserve kind-implied types on owned cross features.
 package semantics
 
 import (
@@ -94,6 +95,17 @@ func (m *Model) implicitCrossFeatureGenerals(sym *symbols.Symbol) []*symbols.Sym
 		return nil
 	}
 	out := append([]*symbols.Symbol(nil), m.DeclaredFeatureTypes(end)...)
+	// An untyped part end still has Parts::Part as a type. Its owned cross
+	// feature inherits kind-implied types as well as written ones.
+	if end.Kind == symbols.SymbolPartUsage {
+		for _, base := range m.implicitBases(end) {
+			if base.IsFeature() {
+				out = append(out, m.FeatureTypeSet(base)...)
+			} else {
+				out = append(out, base)
+			}
+		}
+	}
 	redefined := append([]*symbols.Symbol(nil), m.RedefinedFeatures(end)...)
 	for _, general := range append(redefined, m.implicitEndRedefinitions(end)...) {
 		if !declaresEnd(general) {

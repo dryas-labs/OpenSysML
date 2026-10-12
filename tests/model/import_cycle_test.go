@@ -1,3 +1,4 @@
+// Modified by DRYAS maintainers: keep the recursive filter fixture unambiguous under imported-name hiding.
 package model_test
 
 import (
@@ -82,7 +83,7 @@ package P {
 `,
 		},
 		{
-			name: "filter names the resolved name",
+			name: "filter qualifies same-named metadata",
 			src: `package M { metadata def Good; }
 package S {
 	#M::Good part def Good;
@@ -91,10 +92,7 @@ package S {
 package R {
 	public import S::*;
 }
-package Q {
-	public import R::*[@Good];
-	public import M::*;
-}
+package Q { public import R::*[@M::Good]; }
 package P {
 	public import Q::*;
 	part g : Good;
@@ -122,5 +120,24 @@ package P {
 				t.Fatal("analysing a filtered import over membership imports did not finish in 5s")
 			}
 		})
+	}
+}
+
+// Distinct imported members named Good cannot be selected by import order.
+func TestFilteredImportDoesNotResolveClashingMetadataByOrder(t *testing.T) {
+	ws := model.NewWorkspace()
+	ws.Open("clash.sysml", []byte(`package M { metadata def Good; }
+ package S { #M::Good part def Good; part def Bad; }
+ package R { public import S::*; }
+ package Q { public import R::*[@Good]; public import M::*; }
+ package P { public import Q::*; part g : Good; }`), 1)
+	unresolved := 0
+	for _, d := range ws.Diagnostics("clash.sysml") {
+		if d.Code == "unresolved" && strings.Contains(d.Message, "Good") {
+			unresolved++
+		}
+	}
+	if unresolved != 2 {
+		t.Fatalf("filter and usage must both report the clashing name; got %v", ws.Diagnostics("clash.sysml"))
 	}
 }

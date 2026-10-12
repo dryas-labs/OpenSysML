@@ -1,3 +1,4 @@
+// Modified by DRYAS maintainers: distinguish construction-satisfied constraints from reported violations.
 package validation
 
 import (
@@ -20,6 +21,7 @@ const (
 // Census statuses as the baseline records them. The document shows each one
 // with the marker spec-compliance.md uses for the same meaning.
 const (
+	StatusSatisfied      = "satisfied-by-construction"
 	StatusFaithful       = "faithful"
 	StatusApproximate    = "approximate"
 	StatusNotImplemented = "not-implemented"
@@ -40,6 +42,7 @@ var statusMarkers = []struct {
 	{StatusDeliberate, "⛔ deliberate"},
 	{StatusKnownFailure, "🚧 known failure"},
 	{StatusUnknown, "❔ unknown — no case and no identifiable pass yet"},
+	{StatusSatisfied, "◉ satisfied by construction"},
 }
 
 // recordedDatePattern is the ISO calendar date the baseline's recorded field must hold.

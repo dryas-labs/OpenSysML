@@ -1,3 +1,4 @@
+// Modified by DRYAS maintainers: distinguish construction-satisfied constraints from reported violations.
 package validation
 
 import (
@@ -34,7 +35,7 @@ var derivedLines = []derivedLine{
 	},
 	{
 		marker:  summaryMarker,
-		pattern: regexp.MustCompile(`^\*\*Census:\*\* (\d+) of (\d+) named constraints are reported by OpenSysML — (\d+) ✅ faithful and (\d+) ⚠️ approximate; (\d+) ❌ not implemented, (\d+) ⛔ deliberate, (\d+) 🚧 known failure, (\d+) ❔ unknown\.$`),
+		pattern: regexp.MustCompile(`^\*\*Census:\*\* (\d+) of (\d+) named constraints are reported by OpenSysML — (\d+) ✅ faithful and (\d+) ⚠️ approximate; (\d+) ❌ not implemented, (\d+) ⛔ deliberate, (\d+) 🚧 known failure, (\d+) ❔ unknown, (\d+) ◉ satisfied by construction\.$`),
 		values:  func(b *Baseline) []string { return summaryValues(b.counts()) },
 	},
 }
@@ -45,6 +46,7 @@ func summaryValues(c counts) []string {
 		strconv.Itoa(c.ByState[StatusFaithful]), strconv.Itoa(c.ByState[StatusApproximate]),
 		strconv.Itoa(c.ByState[StatusNotImplemented]), strconv.Itoa(c.ByState[StatusDeliberate]),
 		strconv.Itoa(c.ByState[StatusKnownFailure]), strconv.Itoa(c.ByState[StatusUnknown]),
+		strconv.Itoa(c.ByState[StatusSatisfied]),
 	}
 }
 
@@ -209,7 +211,7 @@ func checkDocument(root, content string, base *Baseline) error {
 		if r.Cells[6] != marker {
 			problems = append(problems, fmt.Sprintf("line %d: %s has status %q, the baseline records %s (%q)", r.Line, name, r.Cells[6], c.Status, marker))
 		}
-		if implemented(c.Status) && (r.Cells[3] == "" || r.Cells[3] == "—") {
+		if (implemented(c.Status) || c.Status == StatusSatisfied) && (r.Cells[3] == "" || r.Cells[3] == "—") {
 			problems = append(problems, fmt.Sprintf("line %d: %s is recorded %s but names no implementation", r.Line, name, c.Status))
 		}
 		problems = append(problems, checkImplementation(decls, r, name, c.Status)...)
@@ -273,16 +275,17 @@ func checkNegativeCase(root string, r row, name string) []string {
 	return problems
 }
 
-// probesDir holds the minimal violating models that back every implemented row.
+// probesDir holds violating models and positive construction controls.
 const probesDir = "tools/census/validation/testdata/probes"
 
-// probe is one violating model and the diagnostic it expects from us.
+// probe is a diagnostic expectation or a clean construction control.
 type probe struct {
 	Path       string
 	Constraint string
 	// Language is the model's notation, kerml or sysml, from its extension.
 	Language string
 	Severity string
+	Clean    bool
 	// Message is a fragment the diagnostic's message must contain.
 	Message string
 }
@@ -318,14 +321,19 @@ func loadProbes(root string) ([]probe, error) {
 		}
 		name := probeConstraintLine.FindStringSubmatch(lines[0])
 		expect := probeExpectLine.FindStringSubmatch(lines[1])
-		if name == nil || expect == nil {
-			return nil, fmt.Errorf("%s/%s: a probe opens with `// Census: <constraint>` and `// Expect: <error|warning>: <message>` lines", probesDir, entry.Name())
+		clean := lines[1] == "// Expect: clean"
+		if name == nil || (expect == nil && !clean) {
+			return nil, fmt.Errorf("%s/%s: a probe opens with `// Census: <constraint>` and `// Expect: <error|warning>: <message>` or `// Expect: clean` lines", probesDir, entry.Name())
 		}
 		stem, _, _ := strings.Cut(strings.TrimSuffix(entry.Name(), ext), ".")
 		if stem != name[1] {
 			return nil, fmt.Errorf("%s/%s: the file is named for %s but declares %s", probesDir, entry.Name(), stem, name[1])
 		}
-		probes = append(probes, probe{Path: filepath.Join(probesDir, entry.Name()), Constraint: name[1], Language: ext[1:], Severity: expect[1], Message: expect[2]})
+		p := probe{Path: filepath.Join(probesDir, entry.Name()), Constraint: name[1], Language: ext[1:], Clean: clean}
+		if !clean {
+			p.Severity, p.Message = expect[1], expect[2]
+		}
+		probes = append(probes, p)
 	}
 	return probes, nil
 }
@@ -359,8 +367,8 @@ func checkProbes(root string, base *Baseline) error {
 			problems = append(problems, fmt.Sprintf("%s names %s, which %s does not list", p.Path, p.Constraint, baselinePath))
 			continue
 		}
-		if !implemented(c.Status) {
-			problems = append(problems, fmt.Sprintf("%s expects a %s for %s, which the baseline records as %s", p.Path, p.Severity, p.Constraint, c.Status))
+		if p.Clean != (c.Status == StatusSatisfied) || (!p.Clean && !implemented(c.Status)) {
+			problems = append(problems, fmt.Sprintf("%s has an incompatible probe for %s, which the baseline records as %s", p.Path, p.Constraint, c.Status))
 			continue
 		}
 		if backed[p.Constraint] == nil {
@@ -370,7 +378,7 @@ func checkProbes(root string, base *Baseline) error {
 		backed[p.Constraint][""] = true
 	}
 	for _, c := range base.Constraints {
-		if !implemented(c.Status) {
+		if !implemented(c.Status) && c.Status != StatusSatisfied {
 			continue
 		}
 		for _, lang := range probeLanguages(c.Source) {
@@ -378,9 +386,9 @@ func checkProbes(root string, base *Baseline) error {
 				continue
 			}
 			if lang == "" {
-				problems = append(problems, fmt.Sprintf("%s is recorded %s but no probe under %s expects its diagnostic", c.Name, c.Status, probesDir))
+				problems = append(problems, fmt.Sprintf("%s is recorded %s but no probe under %s backs its expectation", c.Name, c.Status, probesDir))
 			} else {
-				problems = append(problems, fmt.Sprintf("%s is recorded %s in both notations but no .%s probe under %s expects its diagnostic", c.Name, c.Status, lang, probesDir))
+				problems = append(problems, fmt.Sprintf("%s is recorded %s in both notations but no .%s probe under %s backs its expectation", c.Name, c.Status, lang, probesDir))
 			}
 		}
 	}

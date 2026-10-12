@@ -1,3 +1,4 @@
+// Modified by DRYAS maintainers: cover native-path diagnostic attribution.
 package diff
 
 import (
@@ -259,5 +260,40 @@ func TestPilotDiagnosticsAttribution(t *testing.T) {
 	}
 	if got[rel][0].File != rel || got[rel][0].Line != 7 || got[rel][0].Message != "unresolved reference" {
 		t.Errorf("diagnostics[%q] = %+v", rel, got[rel])
+	}
+}
+
+func TestReadPilotDiagnosticsUsesNativePaths(t *testing.T) {
+	const rel = "Nested Space/Example.kerml"
+	native := filepath.FromSlash(rel)
+	out := make(map[string][]diagnostic)
+	log := native + ":7:4: error: Couldn't resolve reference to Type 'Missing'.\n" +
+		"outside.sysml:1:1: warning: unrelated file\n"
+	unassigned, err := readPilotDiagnostics(strings.NewReader(log), map[string]string{rel: rel}, out, categorizePilot)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(out[rel]) != 1 {
+		t.Fatalf("expected one attributed diagnostic, got %v", out)
+	}
+	got := out[rel][0]
+	if got.File != rel || got.Line != 7 || got.Severity != "error" || got.Category != CategoryUnresolved {
+		t.Fatalf("incorrect attribution: %+v", got)
+	}
+	if len(unassigned) != 1 || !strings.Contains(unassigned[0], "outside.sysml") {
+		t.Fatalf("unattributed diagnostic was lost: %v", unassigned)
+	}
+}
+
+func TestValidatorLabelIsPortable(t *testing.T) {
+	root := t.TempDir()
+	const rel = "build/pilot-sysml-validator/validate-sysml-batch"
+	for _, suffix := range []string{"", ".exe"} {
+		if got := validatorLabel(root, filepath.Join(root, filepath.FromSlash(rel)+suffix)); got != rel {
+			t.Fatalf("validator label = %q, want %q", got, rel)
+		}
+	}
+	if got := validatorLabel(root, filepath.Join(root, "other.exe")); got == rel {
+		t.Fatal("different launcher was equated with the pinned bridge")
 	}
 }

@@ -1,3 +1,4 @@
+<!-- Modified by DRYAS maintainers: distinguish dimensional test controls from unresolved imported unit names. -->
 # Bugs in the OMG materials
 
 One place to look for defects found in the OMG-published sources this
@@ -593,6 +594,15 @@ and two gates in `internal/workspace/model` pin both verdicts as exact sets:
 `TestExprTypeCheckNoStdlibFalsePositives` finds exactly the six uncorrected ones over the bundled
 library — so a correction can only be declared for a line the checker rejects, and a corrected
 line that still reports fails the gate.
+
+The DRYAS import-clash rule exposes another issue: `ISQ` re-exports distinct
+`MagneticDipoleMomentUnit` definitions from `ISQAtomicNuclear` and
+`ISQElectromagnetism`. The original SI text has unresolved references to that name
+at lines 233 and 303. `TestStdlibMagneticDipoleMomentNameClash` checks those original
+references. The dimensional tests below qualify the target as
+`ISQElectromagnetism::MagneticDipoleMomentUnit` in memory, retaining every existing
+dimensional assertion. This is an explicit comparison control, not a claim about
+which target the library author intended; the vendored library is unchanged.
 
 | Library file | Declared type | Dimension of the value | Dimension of the type | Overlay |
 |---|---|---|---|---|

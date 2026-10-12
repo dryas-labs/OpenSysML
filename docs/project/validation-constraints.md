@@ -1,10 +1,11 @@
+<!-- Modified by DRYAS maintainers: separate implicit-Part satisfaction from observable violation coverage. -->
 # Validation-Constraint Census
 
 **Pilot:** [SysML v2 Pilot Implementation](https://github.com/Systems-Modeling/SysML-v2-Pilot-Implementation) release `2026-08`, commit `692170b71867353b8f90341e61556f49a5beb0e5`, artifact `jupyter-sysml-kernel 0.62.0` — the pin in `scripts/pilot-pin.sh`
 **Jar:** `jupyter-sysml-kernel-0.62.0-all.jar` (`sha256:b1ad9d64b1f0c75730facf25a5e2856bc9df2bb4bd39476df2fdf5ae68cd9350`), provisioned by `./scripts/download-pilot-validator.sh`
 **Run:** `go run -C tools ./cmd/validation-census` (restates the **Pilot**, **Jar** and **Census** lines from the baseline); `go run -C tools ./cmd/validation-census -check` (the gate); `go run -C tools ./cmd/validation-census -update` (re-extracts the names from the jar, keeping every recorded status)
 **Baseline:** [validation-constraints-baseline.json](validation-constraints-baseline.json) — the constraint names read from the pinned jar, with the pin, the jar digest, the extraction method and each name's census status
-**Evidence:** `tools/census/validation/testdata/probes/` — one minimal violating model per implemented row, run by `go test -C tools ./census/validation`
+**Evidence:** `tools/census/validation/testdata/probes/` — violating models for reported constraints and clean controls for construction-satisfied constraints, run by `go test -C tools ./census/validation`
 
 **Names:** the file and type names quoted in the Implementation column are the code's own
 identifiers, prefixes included (`w8c_`, `W10B…`); they name nothing outside the source tree, and a
@@ -20,7 +21,7 @@ the diagnostic it reports was recorded as that row's probe.
 
 ## Summary
 
-**Census:** 164 of 217 named constraints are reported by OpenSysML — 158 ✅ faithful and 6 ⚠️ approximate; 0 ❌ not implemented, 1 ⛔ deliberate, 0 🚧 known failure, 52 ❔ unknown.
+**Census:** 163 of 217 named constraints are reported by OpenSysML — 157 ✅ faithful and 6 ⚠️ approximate; 0 ❌ not implemented, 1 ⛔ deliberate, 0 🚧 known failure, 52 ❔ unknown, 1 ◉ satisfied by construction.
 
 The figures on that line, and the pin and digest quoted above, are written by
 `go run -C tools ./cmd/validation-census` from the baseline; `-check` fails on a hand-edited figure or
@@ -49,6 +50,8 @@ Same vocabulary as [spec-compliance.md](spec-compliance.md), plus one value for 
 - **🚧 known failure** — implemented and known wrong (none at this recording).
 - **❔ unknown — no case and no identifiable pass yet** — no textual model was found that makes the *pilot* report the constraint, so there is nothing to map yet. Most of these are structural constraints on the abstract syntax that the textual notation cannot violate (an operator that is not `collect`, a result parameter that is not owned), or constraints whose violation is a syntax error in *both* tools before either validator runs. They are not claimed either way.
 
+- **◉ satisfied by construction** — the textual model and standard-library derivation already satisfy the constraint. A clean control is required, with an implementation citation; it is not counted as an observed rejection.
+
 ### Evidence
 
 Every ✅ and ⚠️ row has a probe under `tools/census/validation/testdata/probes/<constraint>.{kerml,sysml}`:
@@ -65,7 +68,7 @@ The **Negative case** column names the file in `tools/referee/reject/testdata/ne
 [pilot-rejection.md](pilot-rejection.md)) that exercises the constraint against the pilot
 oracle, or `none` where the corpus has no case yet; every case whose header attributes its
 rejection to a pilot constraint (`pilot validate…`) is listed on that constraint's row. This
-census adds no corpus cases.
+census adds no corpus cases. Construction controls use `// Expect: clean`; any diagnostic fails them, and they cannot stand in for a negative probe on a reported-violation row.
 
 ### How the names were read
 
@@ -254,7 +257,7 @@ parser/resolver location. *Our message* is given only where OpenSysML's wording 
 | `validateOccurrenceUsageIsPortion` | SysML | A portion usage is owned by an occurrence definition or usage | internal/check/passes/w10b_individual_portion.go:W10BPortionOwnerPass.Run | — | `semantic/s45-snapshot-outside-occurrence.sysml` | ✅ faithful |
 | `validateOccurrenceUsageType` | SysML | An occurrence, item or part is typed by occurrence definitions | internal/check/passes/w8d_occurrence_typing.go:W8DOccurrenceTypingPass.Run | — | `xpect/p16-part-typed-by-attribute-def.sysml` | ✅ faithful |
 | `validateOperatorExpressionQuantity` | SysML | The right operand of `[` on a quantity is a measurement reference (warning `Should be a measurement reference (unit).`) | internal/check/passes/typecheck_expr.go:exprChecker.checkBracket; internal/semantic/semantics/operator_conformance.go:Model.UnitOperandConformance | `the unit of a quantity must be a measurement reference, found Natural: write a unit such as `` [m] `` or name a feature typed by MeasurementUnit or another measurement reference` — at the unit operand; as the pilot, an operator expression over units (`m * s`, `m * 2`, `(m, 3)`) whose declared result is wider than TensorMeasurementReference conforms when an operand it is passed by value does; a conditional's branches and the fallback of `??` are expression bodies, so `if c ? m else s` warns; `seq#(i)` is judged by `seq` alone (the pilot accepts either argument of `#`); a quantity value nested as the unit (`10 [2 [m]]`) warns, where the pilot's recursion accepts it for the `m` — see `omg-issues.md` | none | ✅ faithful |
-| `validatePartUsagePartDefinition` | SysML | A part is typed by at least one part definition (`A part must be typed by at least one part definition.`; constant declared in `SysMLValidator`, `checkPartUsage` commented out, so the pilot never reports it and the pass follows the specification rather than a pilot-observed diagnostic) | internal/check/passes/part_usage_definition.go:PartUsageDefinitionPass.Run | — | none | ✅ faithful |
+| `validatePartUsagePartDefinition` | SysML | SysML §8.3.11.3 checkPartUsageSpecialization supplies Parts::parts; KerML §8.3.3.3.4 deriveFeatureType retains its Parts::Part type alongside an explicit item definition. The former negative model is valid; see spec-pilot-gap-register.md §19. | internal/semantic/semantics/model.go:Model.FeatureTypeSet; internal/check/passes/part_usage_definition.go:PartUsageDefinitionPass.Run | No diagnostic on the retained clean control. | none | ◉ satisfied by construction |
 | `validatePartUsageType` | SysML | A part is typed by item definitions (`A part must be typed by item definitions.`; constant `validatePartUsageType_` declared in `SysMLValidator`, `checkPartUsage` commented out). Unobservable: the pilot reports `validateOccurrenceUsageType_` instead. Tried: `part p7 : AD` (action def), `part p8 : Real`, `part p : POD` (port def), `part p6 : Anything` | — | — | none | ❔ unknown — no case and no identifiable pass yet |
 | `validatePerformActionUsageReference` | SysML | A perform action usage references an action | internal/check/passes/w11a_usage_typing.go:W11AUsageTypingPass.Run | — | `semantic/s24-perform-references-non-action.sysml` | ✅ faithful |
 | `validatePortDefinitionConjugatedPortDefinition` | SysML | A port definition has exactly one conjugated port definition (`checkPortDefinition`, active). Unobservable in text: `SysML.xtext` `PortDefinition` always adds one `ConjugatedPortDefinitionMember` and no notation adds or removes one. Tried, pilot silent: `port def PD;`, nested port definitions, `port def Q :> ~PD`, `port p : ~PD` | — | — | none | ❔ unknown — no case and no identifiable pass yet |

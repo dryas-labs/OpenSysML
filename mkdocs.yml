@@ -1,3 +1,4 @@
+# Modified by DRYAS maintainers: keep downstream engineering records outside the public documentation site.
 # The site is the docs/ tree unmodified: every page stays a Markdown file read on
 # GitHub, and MkDocs is only the renderer. The exceptions are the landing page, which
 # frames docs/README.md with a hero that only makes sense on a web page, and the header
@@ -109,6 +110,10 @@ validation:
 # Publish what a user or contributor reads; engineering records under docs/project/
 # and staged plans stay in the repository and are read on GitHub.
 exclude_docs: |
+  project/dryas-maintenance.md
+  project/dryas-ci-regressions.md
+  project/dryas-ci-regressions.zh-Hans.md
+  project/imported-name-clashes.md
   API.md
   ARCHITECTURE.md
   MACOS_DISTRIBUTION.md

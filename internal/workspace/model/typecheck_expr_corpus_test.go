@@ -1,3 +1,4 @@
+// Modified by DRYAS maintainers: disambiguate the magnetic-unit reference only in dimensional test controls; assert the original name clash separately.
 package model
 
 import (
@@ -92,6 +93,12 @@ func checkStdlibExprTypeFindings(t *testing.T, src libs.Source, want []string) {
 		if err != nil {
 			t.Fatalf("read %s: %v", name, err)
 		}
+		// ISQ re-exports two distinct MagneticDipoleMomentUnit declarations.
+		// Keep the dimensional assertion against its explicitly named target;
+		// the unmodified text is checked separately for its name-resolution error.
+		if name == "Domain Libraries/Quantities and Units/SI.sysml" {
+			data = []byte(strings.ReplaceAll(string(data), ": MagneticDipoleMomentUnit", ": ISQElectromagnetism::MagneticDipoleMomentUnit"))
+		}
 		ws.Open(name, data, 1)
 		found = append(found, exprTypeDiagnosticLines(ws, name, data)...)
 		ws.Close(name)
@@ -140,6 +147,16 @@ func TestExprTypeCheckStdlibFindingsNeedTheLibrary(t *testing.T) {
 // TestExprTypeCheckNoExampleFalsePositives runs the same guard over the
 // well-formed models the repository ships as examples and runtime fixtures.
 func TestExprTypeCheckNoExampleFalsePositives(t *testing.T) {
+	// These conformance fixtures explicitly expect runtime index errors in their
+	// paired .expected.json files. Require the corresponding static errors too,
+	// rather than treating negative inputs as diagnostic-free positive examples.
+	negativeRoot := filepath.Join("..", "..", "exec", "runtime", "testdata", "conformance")
+	expectedNegatives := map[string]string{
+		filepath.Join(negativeRoot, "calc_sequence_index_non_integer.sysml"): "sequence index must be an Integer, found Rational",
+		filepath.Join(negativeRoot, "calc_sequence_index_zero.sysml"):        "sequence index counts from 1, found 0",
+	}
+	checkedNegatives := make(map[string]bool)
+
 	roots := []string{
 		filepath.Join("..", "..", "..", "examples"),
 		filepath.Join("..", "..", "exec", "runtime", "testdata"),
@@ -168,7 +185,15 @@ func TestExprTypeCheckNoExampleFalsePositives(t *testing.T) {
 				return readErr
 			}
 			ws.Open(path, data, 1)
-			found = append(found, exprTypeDiagnostics(ws, path)...)
+			findings := exprTypeDiagnostics(ws, path)
+			if want, negative := expectedNegatives[path]; negative {
+				checkedNegatives[path] = true
+				if len(findings) != 1 || findings[0] != path+": "+want {
+					t.Errorf("negative fixture %s: got %v, want exactly %q", path, findings, want)
+				}
+			} else {
+				found = append(found, findings...)
+			}
 			ws.Close(path)
 			return nil
 		})
@@ -176,8 +201,32 @@ func TestExprTypeCheckNoExampleFalsePositives(t *testing.T) {
 			t.Fatalf("walk %s: %v", root, err)
 		}
 	}
+	for path := range expectedNegatives {
+		if !checkedNegatives[path] {
+			t.Errorf("negative fixture was not checked: %s", path)
+		}
+	}
 	if len(found) != 0 {
 		t.Fatalf("expression type checker reported %d finding(s) in example models:\n%s",
 			len(found), strings.Join(found, "\n"))
+	}
+}
+
+func TestStdlibMagneticDipoleMomentNameClash(t *testing.T) {
+	const name = "Domain Libraries/Quantities and Units/SI.sysml"
+	data, err := libs.EmbeddedSource().Read(name)
+	if err != nil {
+		t.Fatal(err)
+	}
+	ws := NewWorkspace()
+	ws.Open(name, data, 1)
+	count := 0
+	for _, d := range ws.Diagnostics(name) {
+		if d.Source == "name-resolution" && d.Code == "unresolved" && strings.Contains(d.Message, "MagneticDipoleMomentUnit") {
+			count++
+		}
+	}
+	if count != 2 {
+		t.Fatalf("unmodified SI must report its two clashing imported unit references; got %d", count)
 	}
 }

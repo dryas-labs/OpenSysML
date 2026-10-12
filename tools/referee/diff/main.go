@@ -1,3 +1,4 @@
+// Modified by DRYAS maintainers: keep reference report launcher labels portable.
 // Package diff compares this implementation's diagnostics against the
 // OMG SysML v2 Pilot Implementation over a corpus of models, and reports, per
 // file, the diagnostics both agree on, the ones only we report (candidate false
@@ -163,7 +164,7 @@ func run(opts options) error {
 
 	// Recorded relative to the repository where possible: the JSON is committed
 	// as a baseline, so it must not carry a machine-specific path.
-	report := &Report{Validator: relativeTo(opts.repo, opts.validator), Errata: newErrataReport(overlay)}
+	report := &Report{Validator: validatorLabel(opts.repo, opts.validator), Errata: newErrataReport(overlay)}
 	if report.Pilot, err = pilotVersion(opts.validator); err != nil {
 		return err
 	}
@@ -332,4 +333,10 @@ func collectFiles(repo string, root corpusRoot) ([]string, error) {
 	}
 	sort.Strings(files)
 	return files, nil
+}
+
+// validatorLabel identifies the launcher independently of the native executable
+// suffix. The actual invocation still uses the complete validated path.
+func validatorLabel(repo, path string) string {
+	return strings.TrimSuffix(relativeTo(repo, path), ".exe")
 }
