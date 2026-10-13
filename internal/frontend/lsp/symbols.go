@@ -1,3 +1,4 @@
+// Modified by DRYAS maintainers: expose native declaration kinds and typing in document outlines.
 package lsp
 
 import (
@@ -8,6 +9,7 @@ import (
 	"go.lsp.dev/uri"
 
 	"github.com/Open-MBEE/OpenSysML/internal/semantic/symbols"
+	"github.com/Open-MBEE/OpenSysML/internal/syntax/ast"
 )
 
 // DocumentSymbol returns the hierarchical symbol tree for a document, a bundled
@@ -37,6 +39,7 @@ func walkDocumentSymbols(pos positions, scope *symbols.Scope) []protocol.Documen
 		}
 		ds := protocol.DocumentSymbol{
 			Name:           sym.Name,
+			Detail:         outlineDetail(sym),
 			Kind:           lspSymbolKind(sym.Kind),
 			Range:          pos.rangeOf(sym.DeclSpan),
 			SelectionRange: pos.rangeOf(sym.DeclSpan),
@@ -52,6 +55,43 @@ func walkDocumentSymbols(pos positions, scope *symbols.Scope) []protocol.Documen
 		}
 	}
 	return out
+}
+
+// outlineDetail describes syntax owned by this declaration; it does not infer
+// a type from an initializer or repeat inherited members in the outline.
+func outlineDetail(sym *symbols.Symbol) string {
+	detail := sym.Notation()
+	var relationships []*ast.Relationship
+	switch decl := sym.Decl.(type) {
+	case *ast.Usage:
+		if decl.IsReference && !strings.HasPrefix(detail, "ref ") {
+			detail = "ref " + detail
+		}
+		relationships = decl.Relationships
+	case *ast.CrossFeatureMember:
+		relationships = decl.Relationships
+	}
+	var types []string
+	for _, rel := range relationships {
+		if rel == nil || rel.Kind != ast.RelTyping || rel.Target == nil {
+			continue
+		}
+		target := rel.Target
+		if ref, ok := target.(*ast.FeatureReference); ok {
+			target = ref.Name
+		}
+		if name, ok := target.(*ast.QualifiedName); ok {
+			text := name.Text()
+			if rel.Conjugated {
+				text = "~" + text
+			}
+			types = append(types, text)
+		}
+	}
+	if len(types) > 0 {
+		detail += " : " + strings.Join(types, ", ")
+	}
+	return detail
 }
 
 // lspSymbolKind maps a core SymbolKind to the LSP SymbolKind.

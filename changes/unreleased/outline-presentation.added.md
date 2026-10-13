@@ -1,0 +1,1 @@
+- Document outlines report native declaration kinds, reference modifiers and explicitly declared types, including multiple and conjugated types.
