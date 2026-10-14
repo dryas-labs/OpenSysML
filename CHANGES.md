@@ -9,6 +9,7 @@ latest upstream release and is not a new release announcement.
 
 | Area | Downstream changes |
 | --- | --- |
+| Outline | Native declaration kind, reference modifier and explicit typing in LSP document symbols. |
 | Resolution | Imported-name clashes, hidden re-exports, inherited imports and root-import visibility. |
 | Semantic checks | Retain kind-implied part typing, preserve base-reachable cycles and mutual types, retain resolved typing errors after unrelated unresolved names. |
 | Model API | Experimental native inherited-member, specialization and provenance queries over stdio. |
